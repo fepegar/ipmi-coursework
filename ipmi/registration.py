@@ -14,25 +14,25 @@ def register(ref_path, flo_path, trsf_path=None, res_path=None):
         trsf_path = get_temp_path('.txt')
     if res_path is None:
         res_path = get_temp_path('.nii.gz')
-    ensure_dir(res_path)
-    ensure_dir(trsf_path)
     aladin = niftyreg.RegAladin()
     aladin.inputs.ref_file = str(ref_path)
     aladin.inputs.flo_file = str(flo_path)
     aladin.inputs.aff_file = str(trsf_path)
     aladin.inputs.res_file = str(res_path)
+    ensure_dir(res_path)
+    ensure_dir(trsf_path)
     aladin.run()
     return aladin
 
 
 def resample(flo_path, ref_path, trsf_path, res_path, interpolation='SINC'):
-    ensure_dir(res_path)
     node = niftyreg.RegResample()
     node.inputs.ref_file = str(ref_path)
     node.inputs.flo_file = str(flo_path)
     node.inputs.trans_file = str(trsf_path)
     node.inputs.out_file = str(res_path)
     node.inputs.inter_val = interpolation
+    ensure_dir(res_path)
     node.run()
     return node
 
@@ -45,6 +45,7 @@ def compute_mean_image(images_paths, output_path):
         data += nii.get_data()
     data /= len(images_paths)
     nii = nib.Nifti1Image(data, first_nii.affine)
+    ensure_dir(output_path)
     nib.save(nii, output_path)
 
 
@@ -63,4 +64,6 @@ def compute_mean_labels(labels_paths, labels_paths_map):
     for label in labels:
         priors[label] /= len(labels_paths)
         nii = nib.Nifti1Image(priors[label], first_nii.affine)
-        nib.save(nii, str(labels_paths_map[label]))
+        output_path = str(labels_paths_map[label])
+        ensure_dir(output_path)
+        nib.save(nii, output_path)
