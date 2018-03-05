@@ -38,7 +38,7 @@ def ensure_dir(path):
     if is_dir:
         path.mkdir(parents=True)
     else:
-        path.parents[0].mkdir(parents=True)
+        path.parents[0].mkdir(parents=True, exist_ok=True)
 
 
 def get_unsegmented_images_and_ages():
