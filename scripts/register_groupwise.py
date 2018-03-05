@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from ipmi import path
 from ipmi import registration as reg
 from ipmi.path import get_segmented_images_and_labels
