@@ -1,4 +1,11 @@
+"""
+Module for handling project paths
+"""
 import re
+from pathlib import Path
+from random import choice
+from tempfile import gettempdir
+from string import digits, ascii_letters
 
 from . import constants as const
 
@@ -24,6 +31,7 @@ priors_map = {
 
 
 def ensure_dir(path):
+    """Make sure that the directory and its parents exists"""
     if path.exists():
         return
     is_dir = not path.suffixes
@@ -45,3 +53,8 @@ def get_segmented_images_and_labels():
     images_paths = sorted(segmented_images_dir.glob('*img.nii.gz'))
     labels_paths = sorted(segmented_images_dir.glob('*seg.nii.gz'))
     return images_paths, labels_paths
+
+
+def get_temp_path(suffix):
+    random_str = ''.join([choice(ascii_letters + digits) for n in range(32)])
+    return Path(gettempdir(), random_str).with_suffix(suffix)
