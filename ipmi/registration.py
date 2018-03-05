@@ -1,4 +1,4 @@
-
+import nibabel as nib
 from nipype.interfaces import niftyreg
 
 from .path import ensure_dir, get_temp_path
@@ -37,7 +37,14 @@ def resample(flo_path, ref_path, trsf_path, res_path, interpolation='SINC'):
 
 
 def compute_mean_image(images_paths, output_path):
-    return
+    first_nii = nib.load(str(images_paths[0]))
+    data = first_nii.get_data().astype(float)
+    for image_path in images_paths[1:]:
+        nii = nib.load(str(image_path))
+        data += nii.get_data()
+    data /= len(images_paths)
+    nii = nib.Nifti1Image(data, first_nii.affine)
+    nib.save(nii, output_path)
 
 
 def compute_mean_labels(labels_paths, labels_paths_map):
