@@ -1,6 +1,6 @@
 import re
 
-import constants as const
+from . import constants as const
 
 segmented_images_dir = const.ROOT_DIR / 'Segmented_images'
 unsegmented_images_dir = const.ROOT_DIR / 'Unsegmented_images'
