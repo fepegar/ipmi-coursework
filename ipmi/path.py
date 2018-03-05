@@ -6,6 +6,8 @@ segmented_images_dir = const.ROOT_DIR / 'Segmented_images'
 unsegmented_images_dir = const.ROOT_DIR / 'Unsegmented_images'
 output_dir = const.ROOT_DIR / 'output'
 registration_dir = output_dir / 'registration'
+transforms_dir = registration_dir / 'transforms'
+
 template_path = registration_dir / 'template.nii.gz'
 priors_csf_path = registration_dir / 'csf_priors.nii.gz'
 priors_gm_path = registration_dir / 'gm_priors.nii.gz'
