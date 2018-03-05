@@ -1,3 +1,4 @@
+import numpy as np
 import nibabel as nib
 from nipype.interfaces import niftyreg
 
@@ -48,4 +49,18 @@ def compute_mean_image(images_paths, output_path):
 
 
 def compute_mean_labels(labels_paths, labels_paths_map):
-    return
+    first_nii = nib.load(str(labels_paths[0]))
+    data = first_nii.get_data()
+    labels = np.unique(data)
+    priors = []
+    for label in labels:
+        priors.append((data == label).astype(float))
+    for labels_path in labels_paths[1:]:
+        nii = nib.load(str(labels_path))
+        data = nii.get_data()
+        for label in labels:
+            priors[label] += (data == label).astype(float)
+    for label in labels:
+        priors[label] /= len(labels_paths)
+        nii = nib.Nifti1Image(priors[label], first_nii.affine)
+        nib.save(nii, str(labels_paths_map[label]))
