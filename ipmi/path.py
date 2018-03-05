@@ -16,6 +16,3 @@ def get_segmented_images_and_labels():
     images_paths = sorted(segmented_images_dir.glob('*img.nii.gz'))
     labels_paths = sorted(segmented_images_dir.glob('*seg.nii.gz'))
     return images_paths, labels_paths
-
-if __name__ == '__main__':
-    print(get_segmented_images_and_labels())
