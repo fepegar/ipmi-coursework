@@ -7,11 +7,20 @@ unsegmented_images_dir = const.ROOT_DIR / 'Unsegmented_images'
 output_dir = const.ROOT_DIR / 'output'
 registration_dir = output_dir / 'registration'
 transforms_dir = registration_dir / 'transforms'
+resampled_images_dir = registration_dir / 'resampled_images'
+resampled_labels_dir = registration_dir / 'resampled_labels'
 
 template_path = registration_dir / 'template.nii.gz'
+priors_background_path = registration_dir / 'background_priors.nii.gz'
 priors_csf_path = registration_dir / 'csf_priors.nii.gz'
 priors_gm_path = registration_dir / 'gm_priors.nii.gz'
 priors_wm_path = registration_dir / 'wm_priors.nii.gz'
+priors_map = {
+    0: priors_background_path,
+    1: priors_csf_path,
+    2: priors_gm_path,
+    3: priors_wm_path,
+}
 
 
 def ensure_dir(path):
@@ -23,12 +32,14 @@ def ensure_dir(path):
     else:
         path.parents[0].mkdir(parents=True)
 
+
 def get_unsegmented_images_and_ages():
     images_paths = sorted(unsegmented_images_dir.glob('*.nii.gz'))
     stems = [path.stem for path in images_paths]
     pattern = r'.*_(\d+\.?\d?).*'
     ages = [float(re.match(pattern, stem).groups()[0]) for stem in stems]
     return images_paths, ages
+
 
 def get_segmented_images_and_labels():
     images_paths = sorted(segmented_images_dir.glob('*img.nii.gz'))
