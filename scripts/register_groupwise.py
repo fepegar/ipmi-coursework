@@ -21,15 +21,18 @@ class RegisterGroupwisePipeline:
         ref_name = self.ref_image_path.name.replace('.nii.gz', '')
         for flo_path in self.flo_paths:
             flo_name = flo_path.name.replace('.nii.gz', '')
+
             aff_name = f'{flo_name}_to_{ref_name}.txt'
             aff_path = path.transforms_dir / aff_name
             self.aff_paths.append(aff_path)
+
             res_image_name = f'{flo_name}_on_{ref_name}_img.nii.gz'
             res_image_path = path.resampled_images_dir / res_image_name
             self.res_images_paths.append(res_image_path)
+
             res_labels_name = f'{flo_name}_on_{ref_name}_seg.nii.gz'
             res_labels_path = path.resampled_labels_dir / res_labels_name
-            self.res_images_paths.append(res_labels_path)
+            self.res_labels_paths.append(res_labels_path)
 
 
     def register_all(self):
@@ -38,6 +41,7 @@ class RegisterGroupwisePipeline:
 
 
     def resample_all(self):
+        print('here')
         zipped = zip(self.flo_paths,
                      self.aff_paths,
                      self.res_images_paths,
