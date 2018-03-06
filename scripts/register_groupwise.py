@@ -46,15 +46,14 @@ class RegisterGroupwisePipeline:
 
 
     def resample_all(self):
-        print('here')
         zipped = zip(self.flo_images_paths,
                      self.flo_labels_paths,
                      self.aff_paths,
                      self.res_images_paths,
                      self.res_labels_paths)
         for flo, labels, aff, res_image, res_labels in zipped:
-            # reg.resample(flo, self.ref_image_path, aff,
-            #              res_image, interpolation=reg.SINC)
+            reg.resample(flo, self.ref_image_path, aff,
+                         res_image, interpolation=reg.SINC)
             reg.resample(labels, self.ref_image_path, aff,
                          res_labels, interpolation=reg.NN)
 
@@ -62,13 +61,13 @@ class RegisterGroupwisePipeline:
     def compute_means(self):
         images_paths = [self.ref_image_path] + self.res_images_paths
         labels_paths = [self.ref_labels_path] + self.res_labels_paths
-        # reg.compute_mean_image(images_paths, path.template_path)
+        reg.compute_mean_image(images_paths, path.template_path)
         reg.compute_mean_labels(labels_paths, path.priors_map)
 
 
 def main():
     pipeline = RegisterGroupwisePipeline()
-    # pipeline.register_all()
+    pipeline.register_all()
     pipeline.resample_all()
     pipeline.compute_means()
 
