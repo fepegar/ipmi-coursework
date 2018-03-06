@@ -42,7 +42,8 @@ class RegisterGroupwisePipeline:
 
     def register_all(self):
         for flo_path, aff_path in zip(self.flo_images_paths, self.aff_paths):
-            reg.register(self.ref_image_path, flo_path, trsf_path=aff_path)
+            if not aff_path.is_file():
+                reg.register(self.ref_image_path, flo_path, trsf_path=aff_path)
 
 
     def resample_all(self):
@@ -52,17 +53,21 @@ class RegisterGroupwisePipeline:
                      self.res_images_paths,
                      self.res_labels_paths)
         for flo, labels, aff, res_image, res_labels in zipped:
-            reg.resample(flo, self.ref_image_path, aff,
-                         res_image, interpolation=reg.SINC)
-            reg.resample(labels, self.ref_image_path, aff,
-                         res_labels, interpolation=reg.NN)
+            if not res_image.is_file():
+                reg.resample(flo, self.ref_image_path, aff,
+                             res_image, interpolation=reg.SINC)
+            if not res_labels.is_file():
+                reg.resample(labels, self.ref_image_path, aff,
+                             res_labels, interpolation=reg.NN)
 
 
     def compute_means(self):
-        images_paths = [self.ref_image_path] + self.res_images_paths
-        labels_paths = [self.ref_labels_path] + self.res_labels_paths
-        reg.compute_mean_image(images_paths, path.template_path)
-        reg.compute_mean_labels(labels_paths, path.priors_map)
+        if not path.template_path.is_file():
+            images_paths = [self.ref_image_path] + self.res_images_paths
+            reg.compute_mean_image(images_paths, path.template_path)
+        if not path.priors_map[0].is_file():
+            labels_paths = [self.ref_labels_path] + self.res_labels_paths
+            reg.compute_mean_labels(labels_paths, path.priors_map)
 
 
 def main():
