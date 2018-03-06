@@ -39,7 +39,7 @@ class RegisterGroupwisePipeline:
             flo_name = flo_path.name.replace('.nii.gz', '')
 
             aff_name = f'{flo_name}_to_{ref_name}.txt'
-            aff_path = path.transforms_dir / aff_name
+            aff_path = path.transforms_groupwise_dir / aff_name
             self.aff_paths.append(aff_path)
 
             res_image_name = f'{flo_name}_on_{ref_name}_img.nii.gz'
@@ -51,14 +51,14 @@ class RegisterGroupwisePipeline:
             self.res_labels_paths.append(res_labels_path)
 
 
-    def register_all(self):
+    def coregister_segmented(self):
         """Coregister all segmented images using affine registrations"""
         for flo_path, aff_path in zip(self.flo_images_paths, self.aff_paths):
             if not aff_path.is_file():
                 reg.register(self.ref_image_path, flo_path, trsf_path=aff_path)
 
 
-    def resample_all(self):
+    def resample_segmented(self):
         """Resample the images and labels to the common space"""
         zipped = zip(self.flo_images_paths,
                      self.flo_labels_paths,
@@ -89,8 +89,8 @@ class RegisterGroupwisePipeline:
 
 def main():
     pipeline = RegisterGroupwisePipeline()
-    pipeline.register_all()
-    pipeline.resample_all()
+    pipeline.coregister_segmented()
+    pipeline.resample_segmented()
     pipeline.compute_means()
 
 
