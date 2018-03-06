@@ -42,11 +42,12 @@ class RegisterGroupwisePipeline:
             aff_path = path.transforms_groupwise_dir / aff_name
             self.aff_paths.append(aff_path)
 
-            res_image_name = f'{flo_name}_on_{ref_name}_img.nii.gz'
+            res_image_name = f'{flo_name}_on_{ref_name}.nii.gz'
             res_image_path = path.resampled_images_dir / res_image_name
             self.res_images_paths.append(res_image_path)
 
-            res_labels_name = f'{flo_name}_on_{ref_name}_seg.nii.gz'
+            flo_name = flo_name.replace('img', 'seg')
+            res_labels_name = f'{flo_name}_on_{ref_name}.nii.gz'
             res_labels_path = path.resampled_labels_dir / res_labels_name
             self.res_labels_paths.append(res_labels_path)
 
