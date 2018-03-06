@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+""" Groupwise registration pipeline.
+
+This script performs the groupwise registration, creates the template and
+the tissue priors and propagates the priors to the unsegmented images by
+registering the template to them and resampling the priors.
+"""
+
 from ipmi import path
 from ipmi import registration as reg
 from ipmi.path import get_segmented_images_and_labels
@@ -7,7 +14,11 @@ from ipmi.path import get_segmented_images_and_labels
 REFERENCE_INDEX = 0
 
 class RegisterGroupwisePipeline:
-
+    """
+    Pipeline to perform the groupwise registration to create the template and
+    the tissue priors and to propagate the priors to the unsegmented images
+    spaces.
+    """
     def __init__(self):
         self.images_paths, self.labels_paths = get_segmented_images_and_labels()
 
@@ -41,12 +52,14 @@ class RegisterGroupwisePipeline:
 
 
     def register_all(self):
+        """Coregister all segmented images using affine registrations"""
         for flo_path, aff_path in zip(self.flo_images_paths, self.aff_paths):
             if not aff_path.is_file():
                 reg.register(self.ref_image_path, flo_path, trsf_path=aff_path)
 
 
     def resample_all(self):
+        """Resample the images and labels to the common space"""
         zipped = zip(self.flo_images_paths,
                      self.flo_labels_paths,
                      self.aff_paths,
@@ -62,6 +75,10 @@ class RegisterGroupwisePipeline:
 
 
     def compute_means(self):
+        """
+        Compute the template and priors by calculating the means of the
+        resampled images
+        """
         if not path.template_path.is_file():
             images_paths = [self.ref_image_path] + self.res_images_paths
             reg.compute_mean_image(images_paths, path.template_path)
@@ -75,6 +92,7 @@ def main():
     pipeline.register_all()
     pipeline.resample_all()
     pipeline.compute_means()
+
 
 if __name__ == '__main__':
     main()
