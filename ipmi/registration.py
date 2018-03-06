@@ -46,7 +46,7 @@ def compute_mean_image(images_paths, output_path):
     data /= len(images_paths)
     nii = nib.Nifti1Image(data, first_nii.affine)
     ensure_dir(output_path)
-    nib.save(nii, output_path)
+    nib.save(nii, str(output_path))
 
 
 def compute_mean_labels(labels_paths, labels_paths_map):
@@ -64,6 +64,6 @@ def compute_mean_labels(labels_paths, labels_paths_map):
     for label in labels:
         priors[label] /= len(labels_paths)
         nii = nib.Nifti1Image(priors[label], first_nii.affine)
-        output_path = str(labels_paths_map[label])
+        output_path = labels_paths_map[label]
         ensure_dir(output_path)
-        nib.save(nii, output_path)
+        nib.save(nii, str(output_path))
