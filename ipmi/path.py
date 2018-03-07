@@ -36,6 +36,12 @@ priors_map = {
     2: priors_gm_path,
     3: priors_wm_path,
 }
+priors_dirs = [
+    priors_background_dir,
+    priors_csf_dir,
+    priors_gm_dir,
+    priors_wm_dir,
+]
 
 
 def ensure_dir(path):
