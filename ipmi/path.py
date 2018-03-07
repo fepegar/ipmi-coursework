@@ -31,10 +31,10 @@ priors_csf_path = priors_dir / 'csf_priors.nii.gz'
 priors_gm_path = priors_dir / 'gm_priors.nii.gz'
 priors_wm_path = priors_dir / 'wm_priors.nii.gz'
 priors_map = {
-    0: priors_background_path,
-    1: priors_csf_path,
-    2: priors_gm_path,
-    3: priors_wm_path,
+    const.BACKGROUND: priors_background_path,
+    const.CSF: priors_csf_path,
+    const.GREY_MATTER: priors_gm_path,
+    const.WHITE_MATTER: priors_wm_path,
 }
 priors_dirs = [
     priors_background_dir,
