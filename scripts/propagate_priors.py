@@ -10,6 +10,8 @@ images.
 from ipmi import path
 from ipmi import registration as reg
 
+
+
 class PropagatePriorsPipeline:
     """Pipeline for priors propagation"""
     def __init__(self):
@@ -34,7 +36,18 @@ class PropagatePriorsPipeline:
 
 
     def propagate_priors(self):
-        return
+        # The zip object must be converted to list because
+        # we iterate twice over it
+        zipped_refs_affines = list(zip(self.unsegmented_paths, self.aff_paths))
+        zipped_priors_paths = zip(path.priors_map.values(), path.priors_dirs)
+        for flo_path, res_prior_dir in zipped_priors_paths:
+            flo_name = flo_path.name.replace('.nii.gz', '')
+            for ref_path, aff_path in zipped_refs_affines:
+                ref_name = '_'.join(ref_path.name.split('_')[:2])
+                res_path = res_prior_dir / f'{flo_name}_on_{ref_name}.nii.gz'
+                if not res_path.is_file():
+                    reg.resample(flo_path, ref_path, aff_path,
+                                 res_path, interpolation=reg.SINC)
 
 
 
