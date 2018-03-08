@@ -17,10 +17,11 @@ np.set_printoptions(precision=0)
 class ExpectationMaximisation:
 
     def __init__(self, image_path, num_classes=None,
-                 priors_paths_map=None, epsilon_convergence=1e-5):
+                 priors_paths_map=None, beta=0.5, epsilon_convergence=1e-4):
         self.image_nii = nib.load(str(image_path))
         self.image_data = self.image_nii.get_data().astype(float)
         self.epsilon_convergence = epsilon_convergence
+        self.beta = 0.5
         self.priors = None
         if priors_paths_map is None:
             if num_classes is None:
@@ -101,13 +102,12 @@ class ExpectationMaximisation:
         old_log_likelihood = -np.inf
         iterations = 0
         mrf = np.ones_like(p)
-        beta = 2
 
         while not convergence or iterations > MAX_ITERATIONS:
             print('Iteration number', iterations)
 
             print('\nMeans:', self.means.astype(int))
-            print('\nVariances:', self.variances.astype(int))
+            print('Variances:', self.variances.astype(int))
 
             # Expectation
             p_sum = np.zeros_like(y)
@@ -125,20 +125,19 @@ class ExpectationMaximisation:
 
             # Maximisation
             for k in range(K):
+                # Update means
                 num = (p[..., k] * y).sum()
                 den = p[..., k].sum() + EPSILON_STABILITY
                 self.means[k] = num / den
 
+                # Update variances
                 aux = (y - self.means[k])**2
                 num = (p[..., k] * aux).sum()
                 den = p[..., k].sum() + EPSILON_STABILITY
                 self.variances[k] = num / den
 
-                try:
-                    mrf[..., k] = np.exp(-beta * self.umrf(p, k))
-                except KeyboardInterrupt:
-                    print('MRF computation interrupted')
-                    return p, costs
+                # Update MRF
+                mrf[..., k] = np.exp(-self.beta * self.umrf(p, k))
 
             # Cost function
             log_likelihood = np.sum(np.log(p_sum + EPSILON_STABILITY))
@@ -164,7 +163,9 @@ class ExpectationMaximisation:
             if iterations > MAX_ITERATIONS:
                 print(MAX_ITERATIONS, 'iterations without convergence')
 
-            print(4 * '\n')
+            print(2 * '\n')
+            print(50 * '*')
+            print(2 * '\n')
 
         return p, costs
 
