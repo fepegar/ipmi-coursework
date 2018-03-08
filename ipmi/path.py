@@ -13,19 +13,25 @@ segmented_images_dir = const.ROOT_DIR / 'Segmented_images'
 unsegmented_images_dir = const.ROOT_DIR / 'Unsegmented_images'
 output_dir = const.ROOT_DIR / 'output'
 registration_dir = output_dir / 'registration'
+segmentation_dir = output_dir / 'segmentation'
+
 transforms_dir = registration_dir / 'transforms'
 resampled_images_dir = registration_dir / 'resampled_images'
-resampled_labels_dir = registration_dir / 'resampled_labels'
-resampled_priors_dir = registration_dir / 'resampled_priors'
-priors_dir = registration_dir / 'priors'
+
+resampled_labels_dir = segmentation_dir / 'resampled_labels'
+resampled_priors_dir = segmentation_dir / 'resampled_priors'
+priors_dir = segmentation_dir / 'priors'
+
 transforms_groupwise_dir = transforms_dir / 'groupwise'
 transforms_from_template_dir = transforms_dir / 'from_template'
+
 priors_background_dir = resampled_priors_dir / 'background'
 priors_csf_dir = resampled_priors_dir / 'csf'
 priors_gm_dir = resampled_priors_dir / 'gm'
 priors_wm_dir = resampled_priors_dir / 'wm'
 
 template_path = registration_dir / 'template.nii.gz'
+
 priors_background_path = priors_dir / 'background_priors.nii.gz'
 priors_csf_path = priors_dir / 'csf_priors.nii.gz'
 priors_gm_path = priors_dir / 'gm_priors.nii.gz'
