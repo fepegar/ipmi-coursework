@@ -1,7 +1,7 @@
 import numpy as np
 import nibabel as nib
 
-# from .path import ensure_dir
+from .path import ensure_dir
 
 # From the workshop
 COEF_VARIANCES_1 = 10
@@ -146,6 +146,7 @@ class ExpectationMaximisation:
         for k in range(self.num_classes):
             nii = nib.Nifti1Image(probabilities[..., k], self.image_nii.affine)
             output_path = output_dir / f'{k}.nii.gz'
+            ensure_dir(output_path)
             nib.save(nii, str(output_path))
 
 
@@ -153,4 +154,5 @@ class ExpectationMaximisation:
         probabilities, costs = self.run_em()
         self.write_labels(probabilities, output_dir)
         if costs_path is not None:
+            ensure_dir(costs_path)
             np.save(str(costs_path), costs)
