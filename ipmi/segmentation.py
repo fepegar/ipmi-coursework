@@ -15,7 +15,7 @@ class ExpectationMaximisation:
 
     def __init__(self, image_path, num_classes=None,
                  priors_paths_map=None, epsilon_convergence=1e-5):
-        self.image_nii = nib.load(image_path)
+        self.image_nii = nib.load(str(image_path))
         self.image_data = self.image_nii.get_data().astype(float)
         self.epsilon_convergence = epsilon_convergence
         self.priors = None
@@ -30,10 +30,9 @@ class ExpectationMaximisation:
         else:
             self.num_classes = num_classes = len(priors_paths_map)
             self.priors = self.read_priors(priors_paths_map)
-            self.means = self.get_means_from_priors(self.image_data,
-                                                    self.priors)
-            self.variances = self.get_variances_from_priors(self.image_data,
+            m, v = self.get_means_and_variances_from_priors(self.image_data,
                                                             self.priors)
+            self.means, self.variances = m, v
 
 
     def read_priors(self, priors_paths_map):
@@ -60,12 +59,17 @@ class ExpectationMaximisation:
         return variances
 
 
-    def get_means_from_priors(self, image_data, priors):
-        return self.get_random_means(image_data, priors.shape[-1])
+    def get_means_and_variances_from_priors(self, image_data, priors):
+        means = np.empty(self.num_classes)
+        variances = np.empty(self.num_classes)
+        for k in range(self.num_classes):
+            pik = priors[..., k]
+            mean = np.sum(pik * image_data) / np.sum(pik)
+            sq_diff = (image_data - mean)**2
 
-
-    def get_variances_from_priors(self, image_data, priors):
-        return self.get_random_variances(image_data, priors.shape[-1])
+            means[k] = mean
+            variances[k] = np.sum(pik * sq_diff) / np.sum(pik)
+        return means, variances
 
 
     def gaussian(self, x, variance):
