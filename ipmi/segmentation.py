@@ -10,6 +10,8 @@ COEF_VARIANCES_2 = 0.8
 MAX_ITERATIONS = 100
 EPSILON_STABILITY = np.spacing(1)
 
+np.set_printoptions(precision=0)
+
 
 class ExpectationMaximisation:
 
@@ -78,8 +80,50 @@ class ExpectationMaximisation:
         return a * b
 
 
-    def umrf(self):
-        return
+    def umrf(self, pik, k_class):
+        G = -np.eye(self.num_classes) + 1
+        pik_class = pik[..., 0]
+        umrf = np.zeros_like(pik_class)
+        si, sj, sk = pik_class.shape
+
+        # Comments in RAS wlg
+        for i_idx in range(si):
+            print(i_idx, si)
+            for j_idx in range(sj):
+                for k_idx in range(sk):
+                    umrf_here = 0
+                    for j_class in range(self.num_classes):
+                        umrfj = 0
+
+                        # umrf R
+                        if (i_idx + 1) < si:
+                            umrfj += pik[i_idx + 1, j_idx, k_idx, j_class]
+
+                        # umrf L
+                        if (i_idx - 1) >= 0:
+                            umrfj += pik[i_idx - 1, j_idx, k_idx, j_class]
+
+
+                        # umrf A
+                        if (j_idx + 1) < sj:
+                            umrfj += pik[i_idx, j_idx + 1, k_idx, j_class]
+
+                        # umrf P
+                        if (j_idx - 1) >= 0:
+                            umrfj += pik[i_idx, j_idx - 1, k_idx, j_class]
+
+
+                        # umrf S
+                        if (k_idx + 1) < sk:
+                            umrfj += pik[i_idx, j_idx, k_idx + 1, j_class]
+
+                        # umrf I
+                        if (k_idx - 1) >= 0:
+                            umrfj += pik[i_idx, j_idx, k_idx - 1, j_class]
+
+                        umrf_here += umrfj * G[k_class, j_class]
+                    umrf[i_idx, j_idx, k_idx] = umrf_here
+        return umrf
 
 
     def run_em(self):
@@ -91,22 +135,21 @@ class ExpectationMaximisation:
         p = np.empty(p_shape)
         old_log_likelihood = -np.inf
         iterations = 0
-        np.set_printoptions(precision=2)
+        mrf = np.ones_like(p)
+        beta = 2
+
         while not convergence or iterations > MAX_ITERATIONS:
-            print('\n\n\n\nIteration', iterations)
+            print('Iteration number', iterations)
 
-            print('\nMeans:')
-            print(self.means)
-
-            print('\nVariances:')
-            print(self.variances)
+            print('\nMeans:', self.means.astype(int))
+            print('\nVariances:', self.variances.astype(int))
 
             # Expectation
             p_sum = np.zeros_like(y)
             for k in range(K):
                 gaussian_pdf = self.gaussian(y - self.means[k],
                                              self.variances[k])
-                p[..., k] = gaussian_pdf
+                p[..., k] = gaussian_pdf * mrf[..., k]
                 if self.priors is not None:
                     p[..., k] *= self.priors[..., k]
                 p_sum += p[..., k]
@@ -126,22 +169,37 @@ class ExpectationMaximisation:
                 den = p[..., k].sum() + EPSILON_STABILITY
                 self.variances[k] = num / den
 
+                try:
+                    mrf[..., k] = np.exp(-beta * self.umrf(p, k))
+                except KeyboardInterrupt:
+                    print('MRF computation interrupted')
+                    return p, costs
+
             # Cost function
             log_likelihood = np.sum(np.log(p_sum + EPSILON_STABILITY))
+            print('\n{:20}'.format('Old log likelihood:'), old_log_likelihood)
+            print('{:20}'.format('Log likelihood:'), log_likelihood)
+            print('{:20}'.format('New / old:'),
+                  abs(log_likelihood / old_log_likelihood))
+            print('{:20}'.format('New - old:'),
+                  abs(log_likelihood - old_log_likelihood))
+
             cost = 1 - abs(log_likelihood / old_log_likelihood)
             costs.append(cost)
-            print('\nCost:')
-            print(cost)
+            print('Cost:', cost)
 
             old_log_likelihood = log_likelihood
 
-            if cost < self.epsilon_convergence:
+            # We don't want to stop when cost < 0
+            if cost > 0 and cost < self.epsilon_convergence:
                 convergence = True
                 print('Algorithm converged with cost', cost)
 
             iterations += 1
             if iterations > MAX_ITERATIONS:
                 print(MAX_ITERATIONS, 'iterations without convergence')
+
+            print(4 * '\n')
 
         return p, costs
 
