@@ -72,7 +72,7 @@ class RegisterGroupwisePipeline:
                              res_image, interpolation=reg.SINC)
             if not res_labels.is_file():
                 reg.resample(labels, self.ref_image_path, aff,
-                             res_labels, interpolation=reg.NN)
+                             res_labels, interpolation=reg.NEAREST)
 
 
     def compute_means(self):

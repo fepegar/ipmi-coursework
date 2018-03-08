@@ -47,7 +47,7 @@ class PropagatePriorsPipeline:
                 res_path = res_prior_dir / f'{flo_name}_on_{ref_name}.nii.gz'
                 if not res_path.is_file():
                     reg.resample(flo_path, ref_path, aff_path,
-                                 res_path, interpolation=reg.SINC)
+                                 res_path, interpolation=reg.LINEAR)
 
 
 

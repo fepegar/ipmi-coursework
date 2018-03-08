@@ -4,9 +4,9 @@ from nipype.interfaces import niftyreg
 
 from .path import ensure_dir, get_temp_path
 
-NN = 'NN'
-LIN = 'LIN'
-CUB = 'CUB'
+NEAREST = 'NN'
+LINEAR = 'LIN'
+CUBIV = 'CUB'
 SINC = 'SINC'
 
 def register(ref_path, flo_path, trsf_path=None, res_path=None):
