@@ -65,7 +65,7 @@ class UnsegmentedSubject(Subject):
 
 
     def __repr__(self):
-        return super().__repr__() + f', unsegmented, age: {self.age}'
+        return super().__repr__() + f' (unsegmented, age: {self.age})'
 
 
     @property
@@ -85,16 +85,3 @@ class UnsegmentedSubject(Subject):
         pattern = r'.*_(\d+\.?\d?).*'
         age = float(re.match(pattern, t1_age_path.stem).groups()[0])
         return age
-
-
-
-if __name__ == '__main__':
-    from pathlib import Path
-    subject = UnsegmentedSubject('00', Path('/Users/fernando/Desktop/MPHYGB06_coursework_2018/Unsegmented_images/img_00_age_29.6.nii.gz'))
-    print(subject)
-
-    subject = SegmentedSubject('0',
-                               t1_path=Path('/Users/fernando/Desktop/MPHYGB06_coursework_2018/Segmented_images/template_0_img.nii.gz'),
-                               label_map_path=Path('/Users/fernando/Desktop/MPHYGB06_coursework_2018/Segmented_images/template_0_seg.nii.gz')
-                               )
-    print(subject)
