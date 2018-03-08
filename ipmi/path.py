@@ -11,7 +11,13 @@ from . import constants as const
 
 segmented_images_dir = const.ROOT_DIR / 'Segmented_images'
 unsegmented_images_dir = const.ROOT_DIR / 'Unsegmented_images'
+
 output_dir = const.ROOT_DIR / 'output'
+subjects_dir = output_dir / 'subjects'
+
+segmented_subjects_dir = subjects_dir / 'segmented'
+unsegmented_subjects_dir = subjects_dir / 'unsegmented'
+
 registration_dir = output_dir / 'registration'
 segmentation_dir = output_dir / 'segmentation'
 
