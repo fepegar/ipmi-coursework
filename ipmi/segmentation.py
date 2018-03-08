@@ -1,5 +1,6 @@
 import numpy as np
 import nibabel as nib
+from scipy.ndimage import convolve, generate_binary_structure
 
 from .path import ensure_dir
 
@@ -82,47 +83,11 @@ class ExpectationMaximisation:
 
     def umrf(self, pik, k_class):
         G = -np.eye(self.num_classes) + 1
-        pik_class = pik[..., 0]
-        umrf = np.zeros_like(pik_class)
-        si, sj, sk = pik_class.shape
-
-        # Comments in RAS wlg
-        for i_idx in range(si):
-            print(i_idx, si)
-            for j_idx in range(sj):
-                for k_idx in range(sk):
-                    umrf_here = 0
-                    for j_class in range(self.num_classes):
-                        umrfj = 0
-
-                        # umrf R
-                        if (i_idx + 1) < si:
-                            umrfj += pik[i_idx + 1, j_idx, k_idx, j_class]
-
-                        # umrf L
-                        if (i_idx - 1) >= 0:
-                            umrfj += pik[i_idx - 1, j_idx, k_idx, j_class]
-
-
-                        # umrf A
-                        if (j_idx + 1) < sj:
-                            umrfj += pik[i_idx, j_idx + 1, k_idx, j_class]
-
-                        # umrf P
-                        if (j_idx - 1) >= 0:
-                            umrfj += pik[i_idx, j_idx - 1, k_idx, j_class]
-
-
-                        # umrf S
-                        if (k_idx + 1) < sk:
-                            umrfj += pik[i_idx, j_idx, k_idx + 1, j_class]
-
-                        # umrf I
-                        if (k_idx - 1) >= 0:
-                            umrfj += pik[i_idx, j_idx, k_idx - 1, j_class]
-
-                        umrf_here += umrfj * G[k_class, j_class]
-                    umrf[i_idx, j_idx, k_idx] = umrf_here
+        umrf = np.zeros_like(pik[..., 0])
+        kernel = generate_binary_structure(3, 1)
+        kernel[1, 1, 1] = 0
+        for j_class in range(self.num_classes):
+            umrf += convolve(pik[..., j_class], kernel) * G[k_class, j_class]
         return umrf
 
 
