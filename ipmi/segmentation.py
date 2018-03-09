@@ -32,6 +32,7 @@ def mask(image_path, mask_path, result_path):
     nib.save(result_nii, str(result_path))
 
 
+
 class ExpectationMaximisation:
 
     def __init__(self, image_path, num_classes=None,
@@ -39,7 +40,7 @@ class ExpectationMaximisation:
         self.image_nii = nib.load(str(image_path))
         self.image_data = self.image_nii.get_data().astype(float)
         self.epsilon_convergence = epsilon_convergence
-        self.beta = 0.5
+        self.beta = beta
         self.priors = None
         if priors_paths_map is None:
             if num_classes is None:
