@@ -10,7 +10,8 @@ CUBIV = 'CUB'
 SINC = 'SINC'
 
 def register(ref_path, flo_path, trsf_path=None, res_path=None,
-             ref_mask_path=None, flo_mask_path=None, init_trsf_path=None):
+             ref_mask_path=None, flo_mask_path=None, init_trsf_path=None,
+             rigid_only=False):
     cleanup = []
     if trsf_path is None:
         trsf_path = get_temp_path('.txt')
@@ -23,6 +24,8 @@ def register(ref_path, flo_path, trsf_path=None, res_path=None,
     aladin.inputs.flo_file = str(flo_path)
     aladin.inputs.aff_file = str(trsf_path)
     aladin.inputs.res_file = str(res_path)
+    if rigid_only:
+        aladin.inputs.rig_only_flag = True
     if ref_mask_path is not None:
         aladin.inputs.rmask_file = str(ref_mask_path)
     if flo_mask_path is not None:
