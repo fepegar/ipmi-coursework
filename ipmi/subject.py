@@ -1,6 +1,7 @@
 import re
 
 from ipmi import path
+from . import constants as const
 from . import segmentation as seg
 
 NII_EXT = '.nii.gz'
@@ -10,7 +11,8 @@ AFFINE_EXT = TXT_EXT
 T1 = '_t1'
 LABEL_MAP = '_label_map'
 AGE = '_age'
-
+SEGMENTATION = '_segmentation'
+PRIORS = '_priors'
 
 
 class Subject:
@@ -60,6 +62,7 @@ class SegmentedSubject(Subject):
         self.dir = path.segmented_subjects_dir / self.id
         self.transforms_dir = self.dir / 'transforms'
         self.resampled_dir = self.dir / 'resampled'
+
         self.t1_path = self.get_t1_path()
         self.label_map_path = self.dir / (self.id + LABEL_MAP + NII_EXT)
         self.brain_mask_path = self.dir / (self.id + '_brain_mask' + NII_EXT)
@@ -90,13 +93,49 @@ class UnsegmentedSubject(Subject):
 
     def __init__(self, subject_id, t1_age_path=None):
         super().__init__(subject_id)
-
         self.dir = path.unsegmented_subjects_dir / self.id
+        self.transforms_dir = self.dir / 'transforms'
+        self.priors_dir = self.dir / 'priors'
+        self.segmentation_dir = self.dir / 'segmentation'
+
         self.t1_path = self.get_t1_path()
         self.age_path = self.dir / (self.id + AGE + TXT_EXT)
 
         if t1_age_path is not None:
             self.import_t1_id_and_age(t1_age_path)
+
+        self.template_to_t1_path = self.transforms_dir / (
+            self.id + '_template_to' + T1 + AFFINE_EXT)
+
+        self.priors_background_path = self.priors_dir / (
+            self.id + PRIORS + '_background' + NII_EXT)
+        self.priors_csf_path = self.priors_dir / (
+            self.id + PRIORS + '_csf' + NII_EXT)
+        self.priors_gm_path = self.priors_dir / (
+            self.id + PRIORS + '_gm' + NII_EXT)
+        self.priors_wm_path = self.priors_dir / (
+            self.id + PRIORS + '_wm' + NII_EXT)
+        self.priors_paths_map = {
+            const.BACKGROUND: self.priors_background_path,
+            const.CSF: self.priors_csf_path,
+            const.GREY_MATTER: self.priors_gm_path,
+            const.WHITE_MATTER: self.priors_wm_path,
+        }
+
+        self.segmentation_background_path = self.segmentation_dir / (
+            self.id + SEGMENTATION + '_background' + NII_EXT)
+        self.segmentation_csf_path = self.segmentation_dir / (
+            self.id + SEGMENTATION + '_csf' + NII_EXT)
+        self.segmentation_gm_path = self.segmentation_dir / (
+            self.id + SEGMENTATION + '_gm' + NII_EXT)
+        self.segmentation_wm_path = self.segmentation_dir / (
+            self.id + SEGMENTATION + '_wm' + NII_EXT)
+        self.segmentation_paths_map = {
+            const.BACKGROUND: self.segmentation_background_path,
+            const.CSF: self.segmentation_csf_path,
+            const.GREY_MATTER: self.segmentation_gm_path,
+            const.WHITE_MATTER: self.segmentation_wm_path,
+        }
 
 
     def __repr__(self):
