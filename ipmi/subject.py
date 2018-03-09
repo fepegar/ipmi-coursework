@@ -35,19 +35,19 @@ class Subject:
 
     def get_affine_to_template_path(self, template):
         aff_path = self.transforms_dir / (
-            self.id + T1 + '_to_{template.id}' + AFFINE_EXT)
+            self.id + T1 + f'_to_{template.id}' + AFFINE_EXT)
         return aff_path
 
 
     def get_image_on_template_path(self, template):
         aff_path = self.resampled_dir / (
-            self.id + T1 + '_on_{template.id}' + NII_EXT)
+            self.id + T1 + f'_on_{template.id}' + NII_EXT)
         return aff_path
 
 
     def get_label_map_on_template_path(self, template):
         aff_path = self.resampled_dir / (
-            self.id + LABEL_MAP + '_on_{template.id}' + NII_EXT)
+            self.id + LABEL_MAP + f'_on_{template.id}' + NII_EXT)
         return aff_path
 
 
