@@ -12,6 +12,10 @@ PNG_EXT = '.png'
 PRIORS = '_priors'
 
 
+def get_final_template():
+    return Template(const.FINAL_TEMPLATE)
+
+
 
 class Template:
 
