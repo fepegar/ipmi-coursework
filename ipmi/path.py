@@ -17,46 +17,10 @@ subjects_dir = output_dir / 'subjects'
 templates_dir = output_dir / 'templates'
 
 templates_gif_path = templates_dir / 'evolution.gif'
+template_final_dir = templates_dir / 'template_final'
 
 segmented_subjects_dir = subjects_dir / 'segmented'
 unsegmented_subjects_dir = subjects_dir / 'unsegmented'
-
-registration_dir = output_dir / 'registration'
-segmentation_dir = output_dir / 'segmentation'
-
-transforms_dir = registration_dir / 'transforms'
-resampled_images_dir = registration_dir / 'resampled_images'
-
-resampled_labels_dir = segmentation_dir / 'resampled_labels'
-resampled_priors_dir = segmentation_dir / 'resampled_priors'
-priors_dir = segmentation_dir / 'priors'
-
-transforms_groupwise_dir = transforms_dir / 'groupwise'
-transforms_from_template_dir = transforms_dir / 'from_template'
-
-priors_background_dir = resampled_priors_dir / 'background'
-priors_csf_dir = resampled_priors_dir / 'csf'
-priors_gm_dir = resampled_priors_dir / 'gm'
-priors_wm_dir = resampled_priors_dir / 'wm'
-
-template_path = registration_dir / 'template.nii.gz'
-
-priors_background_path = priors_dir / 'background_priors.nii.gz'
-priors_csf_path = priors_dir / 'csf_priors.nii.gz'
-priors_gm_path = priors_dir / 'gm_priors.nii.gz'
-priors_wm_path = priors_dir / 'wm_priors.nii.gz'
-priors_map = {
-    const.BACKGROUND: priors_background_path,
-    const.CSF: priors_csf_path,
-    const.GREY_MATTER: priors_gm_path,
-    const.WHITE_MATTER: priors_wm_path,
-}
-priors_dirs = [
-    priors_background_dir,
-    priors_csf_dir,
-    priors_gm_dir,
-    priors_wm_dir,
-]
 
 
 def ensure_dir(path):
