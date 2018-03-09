@@ -73,9 +73,10 @@ class SegmentedSubject(Subject):
                 self.label_map_path.symlink_to(label_map_path)
 
 
-    def get_brain_mask(self):
-        seg.get_brain_mask_from_label_map(self.label_map_path,
-                                          self.brain_mask_path)
+    def make_brain_mask(self, force=False):
+        if not self.brain_mask_path.is_file() or force:
+            seg.get_brain_mask_from_label_map(self.label_map_path,
+                                              self.brain_mask_path)
 
 
 
