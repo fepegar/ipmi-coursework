@@ -23,6 +23,15 @@ def get_brain_mask_from_label_map(label_map_path, brain_mask_path):
     nib.save(nii, str(brain_mask_path))
 
 
+def mask(image_path, mask_path, result_path):
+    image_nii = nib.load(str(image_path))
+    data = image_nii.get_data()
+    mask = nib.load(str(mask_path))
+    data = data[mask]
+    result_nii = nii.Nifti1Image(data, image_nii.affine)
+    nib.save(result_nii, str(result_path))
+
+
 class ExpectationMaximisation:
 
     def __init__(self, image_path, num_classes=None,
