@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
-import pathlib
+""" Iterative groupwise registration pipeline.
+
+This script performs one rigid groupwise registration, and N iterations of
+affine groupwise registrations, using previous results as initialisation. The
+templates and priors are created by averaging the resampled images. A GIF
+animation of the results is also written.
+"""
+
 from subprocess import call
 import multiprocessing as mp
 
