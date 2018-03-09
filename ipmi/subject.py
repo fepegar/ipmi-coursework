@@ -1,6 +1,7 @@
 import re
 
 from ipmi import path
+from . import segmentation as seg
 
 NII_EXT = '.nii.gz'
 TXT_EXT = '.txt'
@@ -61,6 +62,7 @@ class SegmentedSubject(Subject):
         self.resampled_dir = self.dir / 'resampled'
         self.t1_path = self.get_t1_path()
         self.label_map_path = self.dir / (self.id + LABEL_MAP + NII_EXT)
+        self.brain_mask_path = self.dir / (self.id + '_brain_mask' + NII_EXT)
 
         if t1_path is not None:
             self.import_t1(t1_path)
@@ -69,6 +71,11 @@ class SegmentedSubject(Subject):
             if not self.label_map_path.is_file():
                 path.ensure_dir(self.label_map_path)
                 self.label_map_path.symlink_to(label_map_path)
+
+
+    def get_brain_mask(self):
+        seg.get_brain_mask_from_label_map(self.label_map_path,
+                                          self.brain_mask_path)
 
 
 

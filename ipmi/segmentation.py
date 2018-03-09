@@ -14,6 +14,15 @@ EPSILON_STABILITY = np.spacing(1)
 np.set_printoptions(precision=0)
 
 
+def get_brain_mask_from_label_map(label_map_path, brain_mask_path):
+    nii = nib.load(str(label_map_path))
+    data = nii.get_data()
+    brain = data > 0
+    nii = nib.Nifti1Image(brain, nii.affine)
+    ensure_dir(brain_mask_path)
+    nib.save(nii, str(brain_mask_path))
+
+
 class ExpectationMaximisation:
 
     def __init__(self, image_path, num_classes=None,
