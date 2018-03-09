@@ -93,17 +93,16 @@ class ExpectationMaximisation:
 
 
     def run_em(self):
-        convergence = False
         y = self.image_data
         K = self.num_classes
         costs = []
         p_shape = list(y.shape) + [self.num_classes]
         p = np.empty(p_shape)
         old_log_likelihood = -np.inf
-        iterations = 0
         mrf = np.ones_like(p)
 
-        while not convergence or iterations > MAX_ITERATIONS:
+        iterations = 0
+        while iterations < MAX_ITERATIONS:
             print('Iteration number', iterations)
 
             print('\nMeans:', self.means.astype(int))
@@ -155,17 +154,17 @@ class ExpectationMaximisation:
             old_log_likelihood = log_likelihood
 
             # We don't want to stop when cost < 0
-            if cost > 0 and cost < self.epsilon_convergence:
-                convergence = True
+            if cost >= 0 and cost < self.epsilon_convergence:
                 print('Algorithm converged with cost', cost)
+                break
 
             iterations += 1
-            if iterations > MAX_ITERATIONS:
-                print(MAX_ITERATIONS, 'iterations without convergence')
 
             print(2 * '\n')
             print(50 * '*')
             print(2 * '\n')
+        else:
+            print(MAX_ITERATIONS, 'iterations reached without convergence')
 
         return p, costs
 
