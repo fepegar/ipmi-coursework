@@ -1,8 +1,10 @@
 import re
 
-from ipmi import path
+from . import path
 from . import constants as const
 from . import segmentation as seg
+from . import registration as reg
+from .template import get_final_template
 
 NII_EXT = '.nii.gz'
 TXT_EXT = '.txt'
@@ -159,3 +161,14 @@ class UnsegmentedSubject(Subject):
         pattern = r'.*_(\d+\.?\d?).*'
         age = float(re.match(pattern, t1_age_path.stem).groups()[0])
         return age
+
+
+    def propagate_priors(self):
+        ref_path = self.t1_path
+        aff_path = self.template_to_t1_path
+        template = get_final_template()
+        zipped = zip(template.priors_paths_map.values(),
+                     self.priors_paths_map.values())
+        for flo_path, res_path in zipped:
+            reg.resample(flo_path, ref_path, aff_path, res_path,
+                     interpolation=reg.LINEAR)
