@@ -201,10 +201,11 @@ class RegisterGroupwiseIterativePipeline:
             affine_template.make_collage_all()
             self.collages_paths.append(affine_template.collage_path)
             reference_template = affine_template
+        affine_template.make_default()
 
 
     def save_collages_gif(self, output_path):
-        cmd = ['convertt']  # ImageMagick
+        cmd = ['convert']  # ImageMagick
         cmd += ['-delay', '50']
         cmd += self.collages_paths
         cmd += [output_path]
