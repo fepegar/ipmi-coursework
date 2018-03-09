@@ -13,7 +13,10 @@ def register(ref_path, flo_path, trsf_path=None, res_path=None):
     if trsf_path is None:
         trsf_path = get_temp_path('.txt')
     if res_path is None:
+        cleanup = True
         res_path = get_temp_path('.nii.gz')
+    else:
+        cleanup = False
     aladin = niftyreg.RegAladin()
     aladin.inputs.ref_file = str(ref_path)
     aladin.inputs.flo_file = str(flo_path)
@@ -22,6 +25,8 @@ def register(ref_path, flo_path, trsf_path=None, res_path=None):
     ensure_dir(res_path)
     ensure_dir(trsf_path)
     aladin.run()
+    if cleanup:
+        res_path.unlink()
     return aladin
 
 
