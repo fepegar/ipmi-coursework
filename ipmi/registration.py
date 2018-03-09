@@ -42,7 +42,7 @@ def register(ref_path, flo_path, trsf_path=None, res_path=None,
     return aladin
 
 
-def resample(flo_path, ref_path, trsf_path, res_path, interpolation='SINC'):
+def resample(flo_path, ref_path, trsf_path, res_path, interpolation=SINC):
     node = niftyreg.RegResample()
     node.inputs.ref_file = str(ref_path)
     node.inputs.flo_file = str(flo_path)
