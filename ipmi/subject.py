@@ -41,15 +41,15 @@ class Subject:
 
 
     def get_image_on_template_path(self, template):
-        aff_path = self.resampled_dir / (
+        res_path = self.resampled_dir / (
             self.id + T1 + f'_on_{template.id}' + NII_EXT)
-        return aff_path
+        return res_path
 
 
     def get_label_map_on_template_path(self, template):
-        aff_path = self.resampled_dir / (
+        res_path = self.resampled_dir / (
             self.id + LABEL_MAP + f'_on_{template.id}' + NII_EXT)
-        return aff_path
+        return res_path
 
 
 
@@ -63,6 +63,7 @@ class SegmentedSubject(Subject):
         self.t1_path = self.get_t1_path()
         self.label_map_path = self.dir / (self.id + LABEL_MAP + NII_EXT)
         self.brain_mask_path = self.dir / (self.id + '_brain_mask' + NII_EXT)
+        self.t1_masked_path = self.dir / (self.id + T1 + '_masked' + NII_EXT)
 
         if t1_path is not None:
             self.import_t1(t1_path)
@@ -77,6 +78,11 @@ class SegmentedSubject(Subject):
         if not self.brain_mask_path.is_file() or force:
             seg.get_brain_mask_from_label_map(self.label_map_path,
                                               self.brain_mask_path)
+
+
+    def mask_t1(self, force=False):
+        if not self.t1_masked_path.is_file() or force:
+            seg.mask(self.t1_path, self.brain_mask_path, self.t1_masked_path)
 
 
 
