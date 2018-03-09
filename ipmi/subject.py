@@ -4,6 +4,7 @@ from ipmi import path
 
 NII_EXT = '.nii.gz'
 TXT_EXT = '.txt'
+AFFINE_EXT = TXT_EXT
 
 T1 = '_t1'
 LABEL_MAP = '_label_map'
@@ -32,12 +33,32 @@ class Subject:
             self.t1_path.symlink_to(t1_path)
 
 
+    def get_affine_to_template_path(self, template):
+        aff_path = self.transforms_dir / (
+            self.id + T1 + '_to_{template.id}' + AFFINE_EXT)
+        return aff_path
+
+
+    def get_image_on_template_path(self, template):
+        aff_path = self.resampled_dir / (
+            self.id + T1 + '_on_{template.id}' + NII_EXT)
+        return aff_path
+
+
+    def get_label_map_on_template_path(self, template):
+        aff_path = self.resampled_dir / (
+            self.id + LABEL_MAP + '_on_{template.id}' + NII_EXT)
+        return aff_path
+
+
 
 class SegmentedSubject(Subject):
 
     def __init__(self, subject_id, t1_path=None, label_map_path=None):
         super().__init__(subject_id)
         self.dir = path.segmented_subjects_dir / self.id
+        self.transforms_dir = self.dir / 'transforms'
+        self.resampled_dir = self.dir / 'resampled'
         self.t1_path = self.get_t1_path()
         self.label_map_path = self.dir / (self.id + LABEL_MAP + NII_EXT)
 
