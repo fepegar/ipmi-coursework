@@ -14,7 +14,7 @@ class RegisterGroupwiseIterativePipeline:
     def __init__(self):
         self.import_all_subjects()
         self.segmented_subjects = ipmi.get_segmented_subjects()
-        self.rigid_template = Template('rigid')
+        self.rigid_template = Template('rigid_template')
 
 
     def import_all_subjects(self):
@@ -43,7 +43,7 @@ class RegisterGroupwiseIterativePipeline:
             template)
         path.ensure_dir(ref_res_img_path)
         if not ref_res_img_path.is_file():
-            ref_res_img_path.symlink_to(ref_path)
+            ref_res_img_path.symlink_to(reference_subject.t1_masked_path)
 
         ref_res_labels_path = reference_subject.get_label_map_on_template_path(
             template)
@@ -73,6 +73,7 @@ class RegisterGroupwiseIterativePipeline:
                 'trsf_path': aff_path,
                 'ref_mask_path': ref_mask_path,
                 'flo_mask_path': flo_mask_path,
+                'rigid_only': True,
             }
             process = mp.Process(target=reg.register, args=args, kwargs=kwargs)
             process.start()
@@ -136,6 +137,8 @@ class RegisterGroupwiseIterativePipeline:
                 kwargs = {
                     'trsf_path': aff_path,
                     'flo_mask_path': flo_mask_path,
+                    'rigid_only': False,
+                    'affine_directly': True,
                 }
                 if init_trsf_path.is_file():
                     kwargs['init_trsf_path'] = init_trsf_path
