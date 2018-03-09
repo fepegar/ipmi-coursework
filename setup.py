@@ -5,5 +5,5 @@ setup(name='ipmi',
       author='Fernando Perez-Garcia',
       author_email='fernando.perezgarcia.17@ucl.ac.uk',
       packages=find_packages(exclude=['*tests']),
-      install_requires=['nibabel', 'nipype'],
+      install_requires=['nibabel', 'nipype', 'Pillow'],
      )
