@@ -11,7 +11,7 @@ class Template:
         self.id = template_id
         self.dir = path.templates_dir / self.id
         self.template_image_path = self.dir / (
-            self.id + '_template_image' + NII_EXT)
+            self.id + '_image' + NII_EXT)
         self.priors_background_path = self.dir / (
             self.id + PRIORS + '_background' + NII_EXT)
         self.priors_csf_path = self.dir / (
