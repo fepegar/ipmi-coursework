@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import pathlib
+from subprocess import call
 import multiprocessing as mp
 
 import ipmi
@@ -15,6 +17,7 @@ class RegisterGroupwiseIterativePipeline:
         self.import_all_subjects()
         self.segmented_subjects = ipmi.get_segmented_subjects()
         self.rigid_template = Template('rigid_template')
+        self.collages_paths = []
 
 
     def import_all_subjects(self):
@@ -113,6 +116,8 @@ class RegisterGroupwiseIterativePipeline:
                             in self.segmented_subjects]
 
             self.rigid_template.generate(images_paths, labels_paths)
+        self.rigid_template.make_collage_all()
+        self.collages_paths.append(self.rigid_template.collage_path)
 
 
     def create_templates_affine(self, iterations):
@@ -186,13 +191,28 @@ class RegisterGroupwiseIterativePipeline:
 
                 affine_template.generate(images_paths, labels_paths)
 
+            affine_template.make_collage_all()
+            self.collages_paths.append(affine_template.collage_path)
             reference_template = affine_template
+
+
+    def save_collages_gif(self, output_path):
+        cmd = ['convertt']  # ImageMagick
+        cmd += ['-delay', '50']
+        cmd += self.collages_paths
+        cmd += [output_path]
+        try:
+            call(cmd)
+        except FileNotFoundError:
+            print('ImageMagick convert not found')
+
 
 
 def main():
     pipeline = RegisterGroupwiseIterativePipeline()
     pipeline.create_template_rigid(reference_id='0')
     pipeline.create_templates_affine(iterations=10)
+    pipeline.save_collages_gif(path.templates_gif_path)
 
 
 if __name__ == '__main__':
