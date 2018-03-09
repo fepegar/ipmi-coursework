@@ -10,14 +10,14 @@ CUBIV = 'CUB'
 SINC = 'SINC'
 
 def register(ref_path, flo_path, trsf_path=None, res_path=None,
-             ref_mask_path=None, flo_mask_path=None):
+             ref_mask_path=None, flo_mask_path=None, init_trsf_path=None):
+    cleanup = []
     if trsf_path is None:
         trsf_path = get_temp_path('.txt')
+        cleanup.append(trsf_path)
     if res_path is None:
-        cleanup = True
         res_path = get_temp_path('.nii.gz')
-    else:
-        cleanup = False
+        cleanup.append(res_path)
     aladin = niftyreg.RegAladin()
     aladin.inputs.ref_file = str(ref_path)
     aladin.inputs.flo_file = str(flo_path)
@@ -27,11 +27,13 @@ def register(ref_path, flo_path, trsf_path=None, res_path=None,
         aladin.inputs.rmask_file = str(ref_mask_path)
     if flo_mask_path is not None:
         aladin.inputs.fmask_file = str(flo_mask_path)
+    if init_trsf_path is not None:
+        aladin.inputs.in_aff_file = str(init_trsf_path)
     ensure_dir(res_path)
     ensure_dir(trsf_path)
     aladin.run()
-    if cleanup:
-        res_path.unlink()
+    for path in cleanup:
+        path.unlink()
     return aladin
 
 
