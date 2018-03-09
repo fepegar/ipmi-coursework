@@ -14,6 +14,7 @@ unsegmented_images_dir = const.ROOT_DIR / 'Unsegmented_images'
 
 output_dir = const.ROOT_DIR / 'output'
 subjects_dir = output_dir / 'subjects'
+templates_dir = output_dir / 'templates'
 
 segmented_subjects_dir = subjects_dir / 'segmented'
 unsegmented_subjects_dir = subjects_dir / 'unsegmented'
