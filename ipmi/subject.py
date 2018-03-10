@@ -171,4 +171,4 @@ class UnsegmentedSubject(Subject):
                      self.priors_paths_map.values())
         for flo_path, res_path in zipped:
             reg.resample(flo_path, ref_path, aff_path, res_path,
-                     interpolation=reg.LINEAR)
+                         interpolation=reg.LINEAR)
