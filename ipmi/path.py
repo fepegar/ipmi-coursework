@@ -24,6 +24,7 @@ unsegmented_subjects_dir = subjects_dir / 'unsegmented'
 
 def ensure_dir(path):
     """Make sure that the directory and its parents exists"""
+    path = Path(path)
     if path.exists():
         return
     is_dir = not path.suffixes
