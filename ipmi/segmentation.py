@@ -2,7 +2,6 @@ from collections import namedtuple
 
 import numpy as np
 import nibabel as nib
-from scipy.spatial.distance import dice
 from scipy.ndimage import convolve, generate_binary_structure
 
 from .path import ensure_dir
@@ -36,7 +35,13 @@ def mask(image_path, mask_path, result_path):
 
 
 def dice_score(array1, array2):
-    return dice(array1.astype(bool), array2.astype(bool))
+    a = array1.astype(bool)
+    b = array2.astype(bool)
+    TP = (a & b).sum()
+    FP = ((a ^ b) & a).sum()
+    FN = ((a ^ b) & b).sum()
+    score = 2 * TP / (2 * TP + FP + FN)
+    return score
 
 
 
@@ -192,7 +197,7 @@ class ExpectationMaximisation:
         else:
             print(MAX_ITERATIONS, 'iterations reached without convergence')
 
-        Results = namedtuple('probabilities', 'costs')
+        Results = namedtuple('EMSegmentationResults', ['probabilities', 'costs'])
         return Results(probabilities=p, costs=costs)
 
 
