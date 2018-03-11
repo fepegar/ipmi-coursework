@@ -13,7 +13,6 @@ COEF_VARIANCES_2 = 0.8
 MAX_ITERATIONS = 100
 EPSILON_STABILITY = np.spacing(1)
 
-np.set_printoptions(precision=0)
 
 
 def get_brain_mask_from_label_map(label_map_path, brain_mask_path):
@@ -131,6 +130,7 @@ class ExpectationMaximisation:
         p = np.empty(p_shape)
         old_log_likelihood = -np.inf
         mrf = np.ones_like(p)
+        np.set_printoptions(precision=0)
 
         iterations = 0
         while iterations < MAX_ITERATIONS:
@@ -197,6 +197,7 @@ class ExpectationMaximisation:
         else:
             print(MAX_ITERATIONS, 'iterations reached without convergence')
 
+        np.set_printoptions(precision=8)  # back to default
         Results = namedtuple('EMSegmentationResults', ['probabilities', 'costs'])
         return Results(probabilities=p, costs=costs)
 
