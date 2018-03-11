@@ -76,7 +76,6 @@ def register_free_form(ref_path, flo_path, init_trsf_path,
     return reg_ff
 
 
-
 def resample(flo_path, ref_path, trsf_path, res_path, interpolation=SINC):
     node = niftyreg.RegResample()
     node.inputs.ref_file = str(ref_path)
@@ -85,6 +84,15 @@ def resample(flo_path, ref_path, trsf_path, res_path, interpolation=SINC):
     node.inputs.out_file = str(res_path)
     node.inputs.inter_val = interpolation
     ensure_dir(res_path)
+    node.run()
+    return node
+
+
+def spline_to_displacement_field(ref_path, input_path, output_path):
+    node = niftyreg.RegTransform()
+    node.inputs.ref1_file = str(ref_path)
+    node.inputs.def_input = str(input_path)
+    node.inputs.out_file = str(output_path)
     node.run()
     return node
 
