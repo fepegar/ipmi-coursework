@@ -106,11 +106,13 @@ class UnsegmentedSubject(Subject):
         if t1_age_path is not None:
             self.import_t1_id_and_age(t1_age_path)
 
+        ## Registration ##
         self.template_to_t1_affine_path = self.transforms_dir / (
             self.id + '_template_to' + T1 + '_affine' + AFFINE_EXT)
         self.template_to_t1_affine_ff_path = self.transforms_dir / (
             self.id + '_template_to' + T1 + '_affine_ff' + NII_EXT)
 
+        ## Segmentation ##
         self.priors_background_path = self.priors_dir / (
             self.id + PRIORS + '_background' + NII_EXT)
         self.priors_csf_path = self.priors_dir / (
@@ -141,6 +143,8 @@ class UnsegmentedSubject(Subject):
             const.WHITE_MATTER: self.segmentation_wm_path,
         }
 
+        self.segmentation_costs_path = self.segmentation_dir / 'costs.npy'
+
 
     def __repr__(self):
         return super().__repr__() + f' (unsegmented, age: {self.age})'
@@ -167,10 +171,17 @@ class UnsegmentedSubject(Subject):
 
     def propagate_priors(self):
         ref_path = self.t1_path
-        aff_path = self.template_to_t1_path
+        aff_path = self.template_to_t1_affine_ff_path
         template = get_final_template()
         zipped = zip(template.priors_paths_map.values(),
                      self.priors_paths_map.values())
         for flo_path, res_path in zipped:
             reg.resample(flo_path, ref_path, aff_path, res_path,
                          interpolation=reg.LINEAR)
+
+
+    def segment(self):
+        em = seg.ExpectationMaximisation(self.t1_path,
+                                         priors_paths_map=self.priors_paths_map)
+        em.run(self.segmentation_paths_map,
+               costs_path=self.segmentation_costs_path)

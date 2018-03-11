@@ -188,17 +188,17 @@ class ExpectationMaximisation:
         return p, costs
 
 
-    def write_labels(self, probabilities, output_dir):
-        for k in range(self.num_classes):
-            nii = nib.Nifti1Image(probabilities[..., k], self.image_nii.affine)
-            output_path = output_dir / f'{k}.nii.gz'
-            ensure_dir(output_path)
-            nib.save(nii, str(output_path))
+    def write_labels(self, probabilities, segmentation_paths_map):
+        for tissue, seg_path in segmentation_paths_map.items():
+            binary = (probabilities[..., tissue] > 0.5).astype(np.uint8)
+            nii = nib.Nifti1Image(binary, self.image_nii.affine)
+            ensure_dir(seg_path)
+            nib.save(nii, str(seg_path))
 
 
-    def run(self, output_dir, costs_path=None):
+    def run(self, segmentation_paths_map, costs_path=None):
         probabilities, costs = self.run_em()
-        self.write_labels(probabilities, output_dir)
+        self.write_labels(probabilities, segmentation_paths_map)
         if costs_path is not None:
             ensure_dir(costs_path)
             np.save(str(costs_path), costs)
