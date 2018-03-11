@@ -140,6 +140,7 @@ class Subject:
                                                      'normalised_volumes'])
         volumes = self.get_tissues_volumes()
         norm_volumes = copy(volumes)
+        del norm_volumes[BRAIN]
         norm_volumes[CSF] /= volumes[BRAIN]
         norm_volumes[GREY_MATTER] /= volumes[BRAIN]
         norm_volumes[WHITE_MATTER] /= volumes[BRAIN]
