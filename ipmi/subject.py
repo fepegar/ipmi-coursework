@@ -37,6 +37,8 @@ class Subject:
             self.id + '_template_to' + T1 + '_affine' + AFFINE_EXT)
         self.template_to_t1_affine_ff_path = self.transforms_dir / (
             self.id + '_template_to' + T1 + '_affine_ff' + NII_EXT)
+        self.template_on_t1_affine_ff_path = self.resampled_dir / (
+            self.id + '_template_on' + T1 + '_affine_ff' + NII_EXT)
 
         ## Segmentation ##
         self.priors_background_path = self.priors_dir / (
@@ -152,18 +154,20 @@ class SegmentedSubject(Subject):
 
     def dice_scores(self):
         DiceScores = namedtuple('DiceScores',
-                                ['gray_matter', 'white_matter', 'csf'])
+                                ['grey_matter', 'white_matter', 'csf'])
         manual_segmentation = nib.load(str(self.label_map_path)).get_data()
-        scores_list = []
-        for k, image_path in self.segmentation_paths_map.items():
-            if k == const.BACKGROUND:  # ignore background
+        scores = {}
+        for tissue, image_path in self.segmentation_paths_map.items():
+            if tissue == const.BACKGROUND:  # ignore background
                 continue
-            tissue_manual = manual_segmentation == k
+            tissue_manual = manual_segmentation == tissue
             tissue_automatic = nib.load(str(image_path)).get_data()
             score = seg.dice_score(tissue_manual, tissue_automatic)
-            scores_list.append(score)
-        csf, wm, gm = scores_list  #pylint: disable=E0632
-        scores = DiceScores(gray_matter=gm, white_matter=wm, csf=csf)
+            scores[tissue] = score
+        csf = scores[const.CSF]
+        gm = scores[const.GREY_MATTER]
+        wm = scores[const.WHITE_MATTER]
+        scores = DiceScores(csf=csf, grey_matter=gm, white_matter=wm)
         return scores
 
 
