@@ -43,9 +43,9 @@ def register(ref_path, flo_path, trsf_path=None, res_path=None,
     return aladin
 
 
-def register_free_form(ref_path, flo_path,
-                       trsf_path=None, res_path=None, ref_mask_path=None,
-                       flo_mask_path=None, init_trsf_path=None,
+def register_free_form(ref_path, flo_path, init_trsf_path,
+                       trsf_path=None, res_path=None,
+                       ref_mask_path=None, flo_mask_path=None,
                        bending_energy=const.DEFAULT_BENDING_ENERGY):
     cleanup = []
     if trsf_path is None:
