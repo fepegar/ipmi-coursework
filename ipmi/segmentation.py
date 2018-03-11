@@ -1,5 +1,8 @@
+from collections import namedtuple
+
 import numpy as np
 import nibabel as nib
+from scipy.spatial.distance import dice
 from scipy.ndimage import convolve, generate_binary_structure
 
 from .path import ensure_dir
@@ -30,6 +33,10 @@ def mask(image_path, mask_path, result_path):
     image_data[mask_data == 0] = 0
     result_nii = nib.Nifti1Image(image_data, image_nii.affine)
     nib.save(result_nii, str(result_path))
+
+
+def dice_score(array1, array2):
+    return dice(array1.astype(bool), array2.astype(bool))
 
 
 
@@ -185,7 +192,8 @@ class ExpectationMaximisation:
         else:
             print(MAX_ITERATIONS, 'iterations reached without convergence')
 
-        return p, costs
+        Results = namedtuple('probabilities', 'costs')
+        return Results(probabilities=p, costs=costs)
 
 
     def write_labels(self, probabilities, segmentation_paths_map):
