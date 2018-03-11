@@ -43,6 +43,15 @@ def dice_score(array1, array2):
     return score
 
 
+def get_volume(image_path):
+    nii = nib.load(str(image_path))
+    N = np.count_nonzero(nii.get_data())
+    dims = nii.header['pixdim'][1:4]
+    voxel_volume = np.prod(dims)
+    total_volume = N * voxel_volume
+    return total_volume
+
+
 
 class ExpectationMaximisation:
 
