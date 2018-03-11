@@ -76,6 +76,12 @@ class Subject:
         return f'Subject {self.id}'
 
 
+    def import_t1(self, t1_path):
+        if not self.t1_path.is_file():
+            path.ensure_dir(self.t1_path)
+            self.t1_path.symlink_to(t1_path)
+
+
     def get_affine_to_template_path(self, template):
         aff_path = self.transforms_dir / (
             self.id + T1 + f'_to_{template.id}' + AFFINE_EXT)
@@ -131,12 +137,6 @@ class SegmentedSubject(Subject):
             if not self.label_map_path.is_file():
                 path.ensure_dir(self.label_map_path)
                 self.label_map_path.symlink_to(label_map_path)
-
-
-    def import_t1(self, t1_path):
-        if not self.t1_path.is_file():
-            path.ensure_dir(self.t1_path)
-            self.t1_path.symlink_to(t1_path)
 
 
     def make_brain_mask(self, force=False):
