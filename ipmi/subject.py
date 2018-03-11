@@ -76,9 +76,6 @@ class Subject:
         return f'Subject {self.id}'
 
 
-
-
-
     def get_affine_to_template_path(self, template):
         aff_path = self.transforms_dir / (
             self.id + T1 + f'_to_{template.id}' + AFFINE_EXT)
@@ -95,6 +92,24 @@ class Subject:
         res_path = self.resampled_dir / (
             self.id + LABEL_MAP + f'_on_{template.id}' + NII_EXT)
         return res_path
+
+
+    def propagate_priors(self):
+        ref_path = self.t1_path
+        aff_path = self.template_to_t1_affine_ff_path
+        template = get_final_template()
+        zipped = zip(template.priors_paths_map.values(),
+                     self.priors_paths_map.values())
+        for flo_path, res_path in zipped:
+            reg.resample(flo_path, ref_path, aff_path, res_path,
+                         interpolation=reg.LINEAR)
+
+
+    def segment(self):
+        em = seg.ExpectationMaximisation(self.t1_path,
+                                         priors_paths_map=self.priors_paths_map)
+        em.run(self.segmentation_paths_map,
+               costs_path=self.segmentation_costs_path)
 
 
 
@@ -145,9 +160,9 @@ class SegmentedSubject(Subject):
                 continue
             tissue_manual = manual_segmentation == k
             tissue_automatic = nib.load(str(image_path)).get_data()
-            score = seg.dice(tissue_manual, tissue_automatic)
+            score = seg.dice_score(tissue_manual, tissue_automatic)
             scores_list.append(score)
-        gm, wm, csf = scores_list
+        csf, wm, gm = scores_list  #pylint: disable=E0632
         scores = DiceScores(gray_matter=gm, white_matter=wm, csf=csf)
         return scores
 
@@ -186,21 +201,3 @@ class UnsegmentedSubject(Subject):
         pattern = r'.*_(\d+\.?\d?).*'
         age = float(re.match(pattern, t1_age_path.stem).groups()[0])
         return age
-
-
-    def propagate_priors(self):
-        ref_path = self.t1_path
-        aff_path = self.template_to_t1_affine_ff_path
-        template = get_final_template()
-        zipped = zip(template.priors_paths_map.values(),
-                     self.priors_paths_map.values())
-        for flo_path, res_path in zipped:
-            reg.resample(flo_path, ref_path, aff_path, res_path,
-                         interpolation=reg.LINEAR)
-
-
-    def segment(self):
-        em = seg.ExpectationMaximisation(self.t1_path,
-                                         priors_paths_map=self.priors_paths_map)
-        em.run(self.segmentation_paths_map,
-               costs_path=self.segmentation_costs_path)
