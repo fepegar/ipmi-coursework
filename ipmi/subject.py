@@ -105,8 +105,6 @@ class SegmentedSubject(Subject):
         self.dir = path.segmented_subjects_dir / self.id
         super().__init__()
 
-
-        self.t1_path = self.get_t1_path()
         self.label_map_path = self.dir / (self.id + LABEL_MAP + NII_EXT)
         self.brain_mask_path = self.dir / (self.id + '_brain_mask' + NII_EXT)
         self.t1_masked_path = self.dir / (self.id + T1 + '_masked' + NII_EXT)
