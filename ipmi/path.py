@@ -20,6 +20,7 @@ unsegmented_subjects_dir = subjects_dir / 'unsegmented'
 
 templates_gif_path = templates_dir / 'evolution.gif'
 dice_report_path = output_dir / 'dice_scores.csv'
+correlations_report_path = output_dir / 'correlations.csv'
 
 
 def ensure_dir(path):
