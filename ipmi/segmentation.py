@@ -134,7 +134,7 @@ class ExpectationMaximisation:
 
         iterations = 0
         while iterations < MAX_ITERATIONS:
-            print('Iteration number', iterations)
+            print('Iteration number', iterations + 1)
 
             print('\nMeans:', self.means.astype(int))
             print('Variances:', self.variances.astype(int))
@@ -197,6 +197,7 @@ class ExpectationMaximisation:
         else:
             print(MAX_ITERATIONS, 'iterations reached without convergence')
 
+        print(5 * '\n')
         np.set_printoptions(precision=8)  # back to default
         Results = namedtuple('EMSegmentationResults', ['probabilities', 'costs'])
         return Results(probabilities=p, costs=costs)
