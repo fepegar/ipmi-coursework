@@ -36,7 +36,7 @@ class PropagatePriorsPipeline:
             cpp_path = subject.template_to_t1_affine_ff_path
             ref_path = subject.t1_path
 
-            if not aff_path.is_file() or force:
+            if not aff_path.is_file():
                 # Linear
                 args = ref_path, flo_path
                 kwargs = {'trsf_path': aff_path}
@@ -122,9 +122,10 @@ class PropagatePriorsPipeline:
 def main():
     force = True
     pipeline = PropagatePriorsPipeline()
-    # pipeline.register_template_to_subjects(force=force)
+    pipeline.register_template_to_subjects(force=force)
     pipeline.propagate_priors(force=force)
     pipeline.segment(force=force)
+    pipeline.dice()
 
 
 if __name__ == '__main__':
