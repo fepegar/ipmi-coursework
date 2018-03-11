@@ -10,7 +10,6 @@ images.
 import multiprocessing as mp
 
 import ipmi
-from ipmi import path
 from ipmi import template
 from ipmi import registration as reg
 
@@ -22,23 +21,41 @@ class PropagatePriorsPipeline:
         self.unsegmented_subjects = ipmi.get_unsegmented_subjects()
 
 
-    def register_template_to_unsegmented(self):
+    def register_template_to_unsegmented(self, free_form=True):
         """Register the template to each unsegmented image"""
         flo_path = template.get_final_template().template_image_path
-        processes = []
+        processes_affine = []
+        processes_affine_ff = []
         for subject in self.unsegmented_subjects:
-            aff_path = subject.template_to_t1_path
+            aff_path = subject.template_to_t1_affine_path
+            cpp_path = subject.template_to_t1_affine_ff_path
             ref_path = subject.t1_path
 
-            if not aff_path.is_file():
-                args = ref_path, flo_path
-                kwargs = {'trsf_path': aff_path}
-                process = mp.Process(target=reg.register,
-                                     args=args, kwargs=kwargs)
-                process.start()
-                processes.append(process)
+            if aff_path.is_file():
+                continue
 
-        for process in processes:
+            # Linear
+            args = ref_path, flo_path
+            kwargs = {'trsf_path': aff_path}
+            process = mp.Process(target=reg.register,
+                                 args=args, kwargs=kwargs)
+            process.start()
+            processes_affine.append(process)
+
+            if not free_form:
+                continue
+            # Free-form
+            args = ref_path, flo_path
+            kwargs = {'trsf_path': cpp_path, 'init_trsf_path': aff_path}
+            process = mp.Process(target=reg.register_free_form,
+                                 args=args, kwargs=kwargs)
+            process.start()
+            processes_affine_ff.append(process)
+
+        for process in processes_affine:
+            process.join()
+
+        for process in processes_affine_ff:
             process.join()
 
 
