@@ -106,8 +106,10 @@ class UnsegmentedSubject(Subject):
         if t1_age_path is not None:
             self.import_t1_id_and_age(t1_age_path)
 
-        self.template_to_t1_path = self.transforms_dir / (
-            self.id + '_template_to' + T1 + AFFINE_EXT)
+        self.template_to_t1_affine_path = self.transforms_dir / (
+            self.id + '_template_to' + T1 + '_affine' + AFFINE_EXT)
+        self.template_to_t1_affine_ff_path = self.transforms_dir / (
+            self.id + '_template_to' + T1 + '_affine_ff' + NII_EXT)
 
         self.priors_background_path = self.priors_dir / (
             self.id + PRIORS + '_background' + NII_EXT)
