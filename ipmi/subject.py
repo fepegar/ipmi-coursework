@@ -1,4 +1,5 @@
 import re
+from copy import copy
 from collections import namedtuple
 
 import nibabel as nib
@@ -8,6 +9,7 @@ from . import constants as const
 from . import segmentation as seg
 from . import registration as reg
 from .template import get_final_template
+from .constants import BACKGROUND, CSF, GREY_MATTER, WHITE_MATTER, BRAIN
 
 NII_EXT = '.nii.gz'
 TXT_EXT = '.txt'
@@ -50,10 +52,10 @@ class Subject:
         self.priors_wm_path = self.priors_dir / (
             self.id + PRIORS + '_wm' + NII_EXT)
         self.priors_paths_map = {
-            const.BACKGROUND: self.priors_background_path,
-            const.CSF: self.priors_csf_path,
-            const.GREY_MATTER: self.priors_gm_path,
-            const.WHITE_MATTER: self.priors_wm_path,
+            BACKGROUND: self.priors_background_path,
+            CSF: self.priors_csf_path,
+            GREY_MATTER: self.priors_gm_path,
+            WHITE_MATTER: self.priors_wm_path,
         }
 
         self.segmentation_background_path = self.segmentation_dir / (
@@ -65,10 +67,10 @@ class Subject:
         self.segmentation_wm_path = self.segmentation_dir / (
             self.id + SEGMENTATION + '_wm' + NII_EXT)
         self.segmentation_paths_map = {
-            const.BACKGROUND: self.segmentation_background_path,
-            const.CSF: self.segmentation_csf_path,
-            const.GREY_MATTER: self.segmentation_gm_path,
-            const.WHITE_MATTER: self.segmentation_wm_path,
+            BACKGROUND: self.segmentation_background_path,
+            CSF: self.segmentation_csf_path,
+            GREY_MATTER: self.segmentation_gm_path,
+            WHITE_MATTER: self.segmentation_wm_path,
         }
 
         self.segmentation_costs_path = self.segmentation_dir / 'costs.npy'
@@ -120,6 +122,31 @@ class Subject:
                costs_path=self.segmentation_costs_path)
 
 
+    def get_tissues_volumes(self):
+        volumes = {}
+        for tissue, image_path in self.segmentation_paths_map.items():
+            if tissue == 0:  # ignore background
+                continue
+            volumes[tissue] = seg.get_volume(image_path)
+        csf = volumes[CSF]
+        gm = volumes[GREY_MATTER]
+        wm = volumes[WHITE_MATTER]
+        volumes[BRAIN] = csf + gm + wm
+        return volumes
+
+
+    def get_volumes_normalised(self):
+        TissueVolumes = namedtuple('TissueVolumes', ['volumes',
+                                                     'normalised_volumes'])
+        volumes = self.get_tissues_volumes()
+        norm_volumes = copy(volumes)
+        norm_volumes[CSF] /= volumes[BRAIN]
+        norm_volumes[GREY_MATTER] /= volumes[BRAIN]
+        norm_volumes[WHITE_MATTER] /= volumes[BRAIN]
+        result = TissueVolumes(volumes=volumes, normalised_volumes=norm_volumes)
+        return result
+
+
 
 class SegmentedSubject(Subject):
 
@@ -162,15 +189,15 @@ class SegmentedSubject(Subject):
         manual_segmentation = nib.load(str(self.label_map_path)).get_data()
         scores = {}
         for tissue, image_path in self.segmentation_paths_map.items():
-            if tissue == const.BACKGROUND:  # ignore background
+            if tissue == BACKGROUND:  # ignore background
                 continue
             tissue_manual = manual_segmentation == tissue
             tissue_automatic = nib.load(str(image_path)).get_data()
             score = seg.dice_score(tissue_manual, tissue_automatic)
             scores[tissue] = score
-        csf = scores[const.CSF]
-        gm = scores[const.GREY_MATTER]
-        wm = scores[const.WHITE_MATTER]
+        csf = scores[CSF]
+        gm = scores[GREY_MATTER]
+        wm = scores[WHITE_MATTER]
         scores = DiceScores(csf=csf, grey_matter=gm, white_matter=wm)
         return scores
 
