@@ -52,11 +52,17 @@ class PropagatePriorsPipeline:
             process.start()
             processes_affine_ff.append(process)
 
-        for process in processes_affine:
-            process.join()
+        chunks = [processes_affine[i:i + 4]
+                  for i in range(len(processes_affine), 4)]
+        for chunk in chunks:
+            for process in chunk:
+                process.join()
 
-        for process in processes_affine_ff:
-            process.join()
+        chunks = [processes_affine_ff[i:i + 4]
+                  for i in range(len(processes_affine_ff), 4)]
+        for chunk in chunks:
+            for process in chunk:
+                process.join()
 
 
     def propagate_priors(self):
