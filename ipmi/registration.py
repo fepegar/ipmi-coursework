@@ -2,6 +2,7 @@ import numpy as np
 import nibabel as nib
 from nipype.interfaces import niftyreg
 
+from . import constants as const
 from .path import ensure_dir, get_temp_path
 
 NEAREST = 'NN'
@@ -44,7 +45,8 @@ def register(ref_path, flo_path, trsf_path=None, res_path=None,
 
 def register_free_form(ref_path, flo_path,
                        trsf_path=None, res_path=None, ref_mask_path=None,
-                       flo_mask_path=None, init_trsf_path=None):
+                       flo_mask_path=None, init_trsf_path=None,
+                       bending_energy=const.DEFAULT_BENDING_ENERGY):
     cleanup = []
     if trsf_path is None:
         trsf_path = get_temp_path('.nii.gz')
@@ -58,6 +60,7 @@ def register_free_form(ref_path, flo_path,
     reg_ff.inputs.flo_file = str(flo_path)
     reg_ff.inputs.cpp_file = str(trsf_path)
     reg_ff.inputs.res_file = str(res_path)
+    reg_ff.inputs.be_val = bending_energy
 
     if ref_mask_path is not None:
         reg_ff.inputs.rmask_file = str(ref_mask_path)
