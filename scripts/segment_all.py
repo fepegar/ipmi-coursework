@@ -4,8 +4,9 @@ import ipmi
 
 
 def main():
-    unsegmented_subjects = ipmi.get_unsegmented_subjects()
-    for subject in unsegmented_subjects:
+    subjects = ipmi.get_segmented_subjects()
+    subjects.extend(ipmi.get_unsegmented_subjects())
+    for subject in subjects:
         print('Segmenting', subject)
         subject.segment()
 
