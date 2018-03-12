@@ -18,6 +18,8 @@ from ipmi import path
 from ipmi import template
 from ipmi import registration as reg
 
+parallel = False
+
 
 
 class SegmentationPipeline:
@@ -33,6 +35,7 @@ class SegmentationPipeline:
         processes_affine = []
         processes_affine_ff = []
         for subject in self.subjects:
+            print('Registering template to', subject)
             aff_path = subject.template_to_t1_affine_path
             cpp_path = subject.template_to_t1_affine_ff_path
             ref_path = subject.t1_path
@@ -41,10 +44,14 @@ class SegmentationPipeline:
                 # Linear
                 args = ref_path, flo_path
                 kwargs = {'trsf_path': aff_path}
-                process = mp.Process(target=reg.register,
-                                     args=args, kwargs=kwargs)
-                process.start()
-                processes_affine.append(process)
+
+                if parallel:
+                    process = mp.Process(target=reg.register,
+                                         args=args, kwargs=kwargs)
+                    process.start()
+                    processes_affine.append(process)
+                else:
+                    reg.register(*args, **kwargs)
 
             if (free_form and not cpp_path.is_file()) or force:
                 res_path = subject.template_on_t1_affine_ff_path
@@ -54,26 +61,31 @@ class SegmentationPipeline:
                           'init_trsf_path': aff_path,
                           'res_path': res_path,
                          }
-                process = mp.Process(target=reg.register_free_form,
-                                     args=args, kwargs=kwargs)
-                process.start()
-                processes_affine_ff.append(process)
+                if parallel:
+                    process = mp.Process(target=reg.register_free_form,
+                                         args=args, kwargs=kwargs)
+                    process.start()
+                    processes_affine_ff.append(process)
+                else:
+                    reg.register_free_form(*args, **kwargs)
 
-        chunks = [processes_affine[i:i + 4]
-                  for i in range(len(processes_affine), 4)]
-        for chunk in chunks:
-            for process in chunk:
-                process.join()
+        if parallel:
+            chunks = [processes_affine[i:i + 4]
+                      for i in range(len(processes_affine), 4)]
+            for chunk in chunks:
+                for process in chunk:
+                    process.join()
 
-        chunks = [processes_affine_ff[i:i + 4]
-                  for i in range(len(processes_affine_ff), 4)]
-        for chunk in chunks:
-            for process in chunk:
-                process.join()
+            chunks = [processes_affine_ff[i:i + 4]
+                      for i in range(len(processes_affine_ff), 4)]
+            for chunk in chunks:
+                for process in chunk:
+                    process.join()
 
 
     def propagate_priors(self, non_linear=True, force=False):
         for subject in self.subjects:
+            print('Resampling priors to', subject)
             subject.propagate_priors(non_linear=non_linear, force=force)
 
 
