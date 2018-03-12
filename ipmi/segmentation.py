@@ -258,11 +258,11 @@ class ExpectationMaximisation:
 
     def run(self, segmentation_path, costs_path=None, costs_plot_path=None):
         self.segmentation_path = segmentation_path
-        probabilities, costs = self.run_em()
-        self.write_labels(probabilities, segmentation_path)
+        results = self.run_em()
+        self.write_labels(results.probabilities, segmentation_path)
         if costs_path is not None:
             ensure_dir(costs_path)
-            np.save(str(costs_path), costs)
+            np.save(str(costs_path), results.costs)
 
         if costs_plot_path is not None:
             import matplotlib as mpl
@@ -275,5 +275,7 @@ class ExpectationMaximisation:
             axis.set_ylabel('Cost')
             axis.grid(True)
             axis.set_yscale('log')
-            axis.plot(costs)
+            axis.plot(results.costs, '-o')
+            axis.xticks(range(0, len(results.costs) + 1, 2))
             fig.savefig(costs_plot_path, dpi=400)
+        return results

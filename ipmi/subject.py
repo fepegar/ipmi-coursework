@@ -63,6 +63,7 @@ class Subject:
             self.id + SEGMENTATION + '_automatic' + NII_EXT)
 
         self.segmentation_costs_path = self.segmentation_dir / 'costs.npy'
+        self.segmentation_costs_plot_path = self.segmentation_dir / 'costs.png'
 
 
     def __repr__(self):
@@ -110,9 +111,11 @@ class Subject:
 
     def segment(self):
         em = seg.ExpectationMaximisation(self.t1_path,
-                                         priors_paths_map=self.priors_paths_map)
+                                         priors_paths_map=self.priors_paths_map,
+                                         write_intermediate=True)
         return em.run(self.segmentation_em_path,
-                      costs_path=self.segmentation_costs_path)
+                      costs_path=self.segmentation_costs_path,
+                      costs_plot_path=self.segmentation_costs_plot_path)
 
 
     def get_tissues_volumes(self):
