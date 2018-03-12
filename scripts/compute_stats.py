@@ -2,6 +2,7 @@
 
 import csv
 
+import numpy as np
 from scipy.stats import pearsonr
 
 import ipmi
@@ -19,8 +20,8 @@ if __name__ == '__main__':
     volumes_tuples = [subject.get_volumes_normalised() for subject in subjects]
 
     icvs = [tup.volumes[BRAIN] for tup in volumes_tuples]
-    gms = [tup.volumes[GREY_MATTER] for tup in volumes_tuples]
-    wms = [tup.volumes[WHITE_MATTER] for tup in volumes_tuples]
+    gms = np.array([tup.volumes[GREY_MATTER] for tup in volumes_tuples])
+    wms = np.array([tup.volumes[WHITE_MATTER] for tup in volumes_tuples])
     gms_norm = [tup.normalised_volumes[GREY_MATTER] for tup in volumes_tuples]
     wms_norm = [tup.normalised_volumes[WHITE_MATTER] for tup in volumes_tuples]
 
@@ -35,3 +36,4 @@ if __name__ == '__main__':
         compute_and_write_row(writer, wms, ages, 'WM')
         compute_and_write_row(writer, gms_norm, ages, 'GM norm')
         compute_and_write_row(writer, wms_norm, ages, 'WM norm')
+        compute_and_write_row(writer, gms / wms, ages, 'GM/WM')
