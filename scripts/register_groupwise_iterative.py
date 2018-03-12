@@ -40,7 +40,7 @@ class RegisterGroupwiseIterativePipeline:
             UnsegmentedSubject(subject_id, t1_age_path=img_path)
 
 
-    def create_template_rigid(self, reference_id):
+    def create_template_rigid(self, reference_id, use_masked=True):
         print('Creating rigid template')
         template = self.rigid_template
         reference_subject = ipmi.get_subject_by_id(self.segmented_subjects,
@@ -97,7 +97,11 @@ class RegisterGroupwiseIterativePipeline:
             subject.mask_t1()
             if subject is reference_subject:
                 continue
-            flo_path = subject.t1_masked_path
+            if use_masked:
+                flo_path = subject.t1_masked_path
+            else:
+                flo_path = subject.t1_path
+
             aff_path = subject.get_affine_to_template_path(template)
             res_t1_path = subject.get_image_on_template_path(template)
             res_label_map_path = subject.get_label_map_on_template_path(
@@ -127,7 +131,7 @@ class RegisterGroupwiseIterativePipeline:
         self.collages_paths.append(self.rigid_template.collage_path)
 
 
-    def create_templates_affine(self, iterations):
+    def create_templates_affine(self, iterations, use_masked=True):
         reference_template = self.rigid_template
         for i in range(iterations):
             print(f'Running iteration {i} for affine template')
@@ -165,7 +169,11 @@ class RegisterGroupwiseIterativePipeline:
 
             # Resample images and labels
             for subject in self.segmented_subjects:
-                flo_path = subject.t1_masked_path
+                if use_masked:
+                    flo_path = subject.t1_masked_path
+                else:
+                    flo_path = subject.t1_path
+
                 aff_path = subject.get_affine_to_template_path(affine_template)
 
                 res_t1_path = subject.get_image_on_template_path(
@@ -218,8 +226,8 @@ class RegisterGroupwiseIterativePipeline:
 
 def main():
     pipeline = RegisterGroupwiseIterativePipeline()
-    pipeline.create_template_rigid(reference_id='0')
-    pipeline.create_templates_affine(iterations=10)
+    pipeline.create_template_rigid(reference_id='0', use_masked=False)
+    pipeline.create_templates_affine(iterations=10, use_masked=False)
     pipeline.save_collages_gif(path.templates_gif_path)
 
 
