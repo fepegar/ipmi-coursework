@@ -1,4 +1,5 @@
 from . import path
+from . import nifti
 from . import segmentation
 from . import registration
 from .template import Template
