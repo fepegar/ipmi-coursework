@@ -31,8 +31,8 @@ class RegisterGroupwiseIterativePipeline:
         segmented_paths, labels_paths = path.get_segmented_images_and_labels()
         for img_path, labels_path in zip(segmented_paths, labels_paths):
             subject_id = img_path.name.split('_')[1]
-            SegmentedSubject(subject_id,
-                             t1_path=img_path, label_map_path=labels_path)
+            SegmentedSubject(subject_id, t1_path=img_path,
+                             segmentation_manual_path=labels_path)
 
         unsegmented_paths, _ = path.get_unsegmented_images_and_ages()
         for img_path in unsegmented_paths:
@@ -40,7 +40,7 @@ class RegisterGroupwiseIterativePipeline:
             UnsegmentedSubject(subject_id, t1_age_path=img_path)
 
 
-    def create_template_rigid(self, reference_id, use_masked=True):
+    def create_template_rigid(self, reference_id, use_masked=True, force=False):
         print('Creating rigid template')
         template = self.rigid_template
         reference_subject = ipmi.get_subject_by_id(self.segmented_subjects,
@@ -59,7 +59,8 @@ class RegisterGroupwiseIterativePipeline:
             template)
         path.ensure_dir(ref_res_labels_path)
         if not ref_res_labels_path.is_file():
-            ref_res_labels_path.symlink_to(reference_subject.label_map_path)
+            ref_res_labels_path.symlink_to(
+                reference_subject.segmentation_manual_path)
 
         # Run registrations in parallel
         processes = []
@@ -73,10 +74,12 @@ class RegisterGroupwiseIterativePipeline:
             res_t1_path = subject.get_image_on_template_path(template)
             res_label_map_path = subject.get_label_map_on_template_path(
                 template)
-            label_map_path = subject.label_map_path
+            label_map_path = subject.segmentation_manual_path
 
             if aff_path.is_file():
-                continue
+                print(aff_path, 'already exists')
+                if not force:
+                    continue
 
             args = ref_path, flo_path
             kwargs = {
@@ -106,9 +109,9 @@ class RegisterGroupwiseIterativePipeline:
             res_t1_path = subject.get_image_on_template_path(template)
             res_label_map_path = subject.get_label_map_on_template_path(
                 template)
-            label_map_path = subject.label_map_path
+            label_map_path = subject.segmentation_manual_path
 
-            if res_t1_path.is_file():
+            if res_t1_path.is_file() and not force:
                 continue
 
             reg.resample(flo_path, ref_path, aff_path,
@@ -117,7 +120,7 @@ class RegisterGroupwiseIterativePipeline:
                          res_label_map_path, interpolation=reg.NEAREST)
 
         # Create template and priors from resampled images
-        if not self.rigid_template.exists():
+        if not self.rigid_template.exists() or force:
             images_paths = [subject.get_image_on_template_path(template)
                             for subject
                             in self.segmented_subjects]
@@ -131,7 +134,7 @@ class RegisterGroupwiseIterativePipeline:
         self.collages_paths.append(self.rigid_template.collage_path)
 
 
-    def create_templates_affine(self, iterations, use_masked=True):
+    def create_templates_affine(self, iterations, use_masked=True, force=False):
         reference_template = self.rigid_template
         for i in range(iterations):
             print(f'Running iteration {i} for affine template')
@@ -146,8 +149,11 @@ class RegisterGroupwiseIterativePipeline:
                 aff_path = subject.get_affine_to_template_path(affine_template)
                 init_trsf_path = subject.get_affine_to_template_path(
                     reference_template)
+
                 if aff_path.is_file():
-                    continue
+                    print(aff_path, 'already exists')
+                    if not force:
+                        continue
 
                 args = ref_path, flo_path
                 kwargs = {
@@ -180,9 +186,9 @@ class RegisterGroupwiseIterativePipeline:
                     affine_template)
                 res_label_map_path = subject.get_label_map_on_template_path(
                     affine_template)
-                label_map_path = subject.label_map_path
+                label_map_path = subject.segmentation_manual_path
 
-                if res_t1_path.is_file():
+                if res_t1_path.is_file() and not force:
                     continue
 
                 reg.resample(flo_path, ref_path, aff_path,
@@ -191,7 +197,7 @@ class RegisterGroupwiseIterativePipeline:
                              res_label_map_path, interpolation=reg.NEAREST)
 
             # Make template and priors from resampled images
-            if not affine_template.exists():
+            if not affine_template.exists() or force:
                 images_paths = [
                     subject.get_image_on_template_path(affine_template)
                     for subject
@@ -225,9 +231,12 @@ class RegisterGroupwiseIterativePipeline:
 
 
 def main():
+    force = True
     pipeline = RegisterGroupwiseIterativePipeline()
-    pipeline.create_template_rigid(reference_id='0', use_masked=False)
-    pipeline.create_templates_affine(iterations=10, use_masked=False)
+    pipeline.create_template_rigid(
+        reference_id='0', use_masked=False, force=force)
+    pipeline.create_templates_affine(
+        iterations=20, use_masked=False, force=force)
     pipeline.save_collages_gif(path.templates_gif_path)
 
 
