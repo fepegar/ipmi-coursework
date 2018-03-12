@@ -137,6 +137,7 @@ class ExpectationMaximisation:
 
 
     def umrf(self, pik, k_class):
+        # MRF energy function
         G = -np.eye(self.num_classes) + 1
         umrf = np.zeros_like(pik[..., 0])
         kernel = generate_binary_structure(3, 1)
@@ -166,25 +167,27 @@ class ExpectationMaximisation:
             # Expectation
             p_sum = np.zeros_like(y)
             for k in range(K):
-                gaussian_pdf = self.gaussian(y - self.means[k],
-                                             self.variances[k])
-                p[..., k] = gaussian_pdf * mrf[..., k]
+                # Eq (1) of Van Leemput 1
+                p[..., k] = self.gaussian(y - self.means[k],
+                                          self.variances[k])
                 if self.priors is not None:
                     p[..., k] *= self.priors[..., k]
+
+                p[..., k] *= mrf[..., k]
                 p_sum += p[..., k]
 
-            # Normalise posterior
+            # Normalise posterior (Eq (2) of Van Leemput 1)
             for k in range(K):
                 p[..., k] /= p_sum + EPSILON_STABILITY
 
             # Maximisation
             for k in range(K):
-                # Update means
+                # Update means (Eq (3) of Van Leemput 1)
                 num = (p[..., k] * y).sum()
                 den = p[..., k].sum() + EPSILON_STABILITY
                 self.means[k] = num / den
 
-                # Update variances
+                # Update variances (Eq (4) of Van Leemput 1)
                 sq_diffs = (y - self.means[k])**2
                 num = (p[..., k] * sq_diffs).sum()
                 den = p[..., k].sum() + EPSILON_STABILITY
