@@ -20,18 +20,15 @@ def get_brain_mask_from_label_map(label_map_path, brain_mask_path):
     nii = nifti.load(label_map_path)
     data = nii.get_data()
     brain = (data > 0).astype(np.uint8)
-    nii = nib.Nifti1Image(brain, nii.affine)
-    ensure_dir(brain_mask_path)
-    nib.save(nii, str(brain_mask_path))
+    nifti.save(brain, nii.affine, brain_mask_path)
 
 
 def mask(image_path, mask_path, result_path):
-    image_nii = nib.load(str(image_path))
+    image_nii = nifti.load(image_path)
     image_data = image_nii.get_data()
-    mask_data = nib.load(str(mask_path)).get_data()
+    mask_data = nifti.load(mask_path).get_data()
     image_data[mask_data == 0] = 0
-    result_nii = nib.Nifti1Image(image_data, image_nii.affine)
-    nib.save(result_nii, str(result_path))
+    nifti.save(image_data, image_nii.affine, result_path)
 
 
 def dice_score(array1, array2):
@@ -45,8 +42,8 @@ def dice_score(array1, array2):
 
 
 def label_map_dice_scores(image_path1, image_path2):
-    data1 = nib.load(str(image_path1)).get_data()
-    data2 = nib.load(str(image_path2)).get_data()
+    data1 = nifti.load(image_path1).get_data()
+    data2 = nifti.load(image_path2).get_data()
     labels1 = np.unique(data1)
     labels2 = np.unique(data2)
     if not np.all(np.equal(labels1, labels2)):
@@ -59,9 +56,8 @@ def label_map_dice_scores(image_path1, image_path2):
 
 
 def get_label_map_volumes(image_path):
-    nii = nib.load(str(image_path))
-    dims = nii.header['pixdim'][1:4]
-    voxel_volume = np.prod(dims)
+    nii = nifti.load(image_path)
+    voxel_volume = nifti.get_voxel_volume(nii)
     data = nii.get_data()
     volumes = {}
     for label in np.unique(data):
@@ -76,7 +72,7 @@ class ExpectationMaximisation:
 
     def __init__(self, image_path, num_classes=None,
                  priors_paths_map=None, beta=0.5, epsilon_convergence=1e-4):
-        self.image_nii = nib.load(str(image_path))
+        self.image_nii = nifti.load(image_path)
         self.image_data = self.image_nii.get_data().astype(float)
         self.epsilon_convergence = epsilon_convergence
         self.beta = beta
@@ -101,7 +97,7 @@ class ExpectationMaximisation:
         priors_shape = list(self.image_data.shape) + [len(priors_paths_map)]
         priors = np.empty(priors_shape)
         for k, path in priors_paths_map.items():
-            priors[..., k] = nib.load(str(path)).get_data()
+            priors[..., k] = nifti.load(path).get_data()
         return priors
 
 
@@ -236,9 +232,7 @@ class ExpectationMaximisation:
         for tissue in range(self.num_classes):
             mask_data = probabilities[..., tissue] > 0.5
             label_map[mask_data] = tissue
-        nii = nib.Nifti1Image(label_map, self.image_nii.affine)
-        ensure_dir(segmentation_path)
-        nib.save(nii, str(segmentation_path))
+        nifti.save(label_map, self.image_nii.affine, segmentation_path)
 
 
     def run(self, segmentation_path, costs_path=None):

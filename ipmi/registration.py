@@ -2,6 +2,7 @@ import numpy as np
 import nibabel as nib
 from nipype.interfaces import niftyreg
 
+from . import nifti
 from . import constants as const
 from .path import ensure_dir, get_temp_path
 
@@ -98,32 +99,28 @@ def spline_to_displacement_field(ref_path, input_path, output_path):
 
 
 def compute_mean_image(images_paths, output_path):
-    first_nii = nib.load(str(images_paths[0]))
+    first_nii = nifti.load(images_paths[0])
     data = first_nii.get_data().astype(float)
     for image_path in images_paths[1:]:
-        nii = nib.load(str(image_path))
+        nii = nifti.load(image_path)
         data += nii.get_data()
     data /= len(images_paths)
-    nii = nib.Nifti1Image(data, first_nii.affine)
-    ensure_dir(output_path)
-    nib.save(nii, str(output_path))
+    nifti.save(data, first_nii.affine, output_path)
 
 
 def compute_mean_labels(labels_paths, labels_paths_map):
-    first_nii = nib.load(str(labels_paths[0]))
+    first_nii = nifti.load(labels_paths[0])
     data = first_nii.get_data()
     labels = np.unique(data)
     priors = []
     for label in labels:
         priors.append((data == label).astype(float))
     for labels_path in labels_paths[1:]:
-        nii = nib.load(str(labels_path))
+        nii = nifti.load(labels_path)
         data = nii.get_data()
         for label in labels:
             priors[label] += (data == label).astype(float)
     for label in labels:
         priors[label] /= len(labels_paths)
-        nii = nib.Nifti1Image(priors[label], first_nii.affine)
         output_path = labels_paths_map[label]
-        ensure_dir(output_path)
-        nib.save(nii, str(output_path))
+        nifti.save(priors[label], first_nii.affine, output_path)

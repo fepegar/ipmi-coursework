@@ -3,6 +3,7 @@ import nibabel as nib
 from PIL import Image
 
 from . import path
+from . import nifti
 from . import constants as const
 from . import registration as reg
 
@@ -98,7 +99,7 @@ class Template:
             data = data.astype(np.uint8)
             return data
 
-        nii = nib.load(str(nii_path))
+        nii = nifti.load(nii_path)
         data = nii.get_data()
         data = normalise_int(data)
         si, sj, sk = data.shape
