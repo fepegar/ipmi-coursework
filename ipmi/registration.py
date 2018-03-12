@@ -1,3 +1,4 @@
+import nipype
 import numpy as np
 import nibabel as nib
 from nipype.interfaces import niftyreg
@@ -10,6 +11,10 @@ NEAREST = 'NN'
 LINEAR = 'LIN'
 CUBIV = 'CUB'
 SINC = 'SINC'
+
+nipype.config.set('logging', 'workflow_level',  'CRITICAL')
+nipype.config.set('logging', 'interface_level', 'CRITICAL')
+nipype.logging.update_logging(nipype.config)
 
 def register(ref_path, flo_path, trsf_path=None, res_path=None,
              ref_mask_path=None, flo_mask_path=None, init_trsf_path=None,
