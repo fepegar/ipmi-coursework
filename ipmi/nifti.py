@@ -1,6 +1,7 @@
 import numpy as np
 import nibabel as nib
 
+from .path import ensure_dir
 
 def load(path):
     nii = nib.load(str(path))
@@ -9,6 +10,7 @@ def load(path):
 
 def save(data, affine, path):
     nii = nib.Nifti1Image(data, affine)
+    ensure_dir(path)
     nib.save(nii, str(path))
 
 
