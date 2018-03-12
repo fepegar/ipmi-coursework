@@ -158,12 +158,14 @@ class ExpectationMaximisation:
         p = np.empty(p_shape)
         old_log_likelihood = -np.inf
         mrf = np.ones_like(p)
+        BF = 0
+
         np.set_printoptions(precision=0)
 
         if self.write_intermediate and self.priors is not None:
             print('Writing initial segmentation (priors)...')
             segmentation_path = str(self.segmentation_path).replace(
-                '.nii.gz', '_priors.nii.gz')
+                '.nii.gz', '_iteration_0_priors.nii.gz')
             self.write_labels(self.priors, segmentation_path)
 
         iterations = 0
@@ -176,8 +178,9 @@ class ExpectationMaximisation:
             ## Expectation ##
             print('\n-- Expectation --')
             print('Classifying...')
+
             # Eq (1) of Van Leemput 1
-            p = self.gaussian(y[..., np.newaxis] - self.means,
+            p = self.gaussian(y[..., np.newaxis] - self.means - BF,
                               self.variances)
             if self.priors is not None:
                 p *= self.priors
@@ -195,6 +198,7 @@ class ExpectationMaximisation:
 
 
             ## Maximisation ##
+            # "class distribution parameter estimation"
             print('\n-- Maximisation --')
             print('Updating means...')
             # Update means (Eq (3) of Van Leemput 1)
@@ -213,6 +217,24 @@ class ExpectationMaximisation:
             # Update MRF
             for j in range(K):
                 mrf[..., j] = np.exp(-self.beta * self.u_mrf(p, j))
+
+            print('Updating INU correction coefficients...')
+            # Intensity non-uniformity correction #
+            weights = p / self.variances
+            w_i = weights.sum(axis=3)
+            W = np.diag(w_i.ravel())  # N x N
+            # predicted signal
+            y_tilde = (weights * self.means).sum(axis=3) / weights.sum(axis=3)
+            M = 11  # number of basis
+            N = y.size
+            A = np.empty((N, M))  # N x M
+            At = A.T  # M x N
+            R = (y - y_tilde).reshape(-1, 1)  # N x 1
+            WR = np.matmul(W, R)  # NxN x Nx1 = N x 1
+            AtWR = np.matmul(At, WR)  # MxN x Nx1 = M x 1
+            WA = np.matmul(W, A)  # NxN x NxM = N x M
+            AtWA = np.matmul(At, WA)  # MxN x NxM = M x M
+            C = np.matmul(np.linalg.inv(AtWA), AtWR)  # ¿MxM? x Mx1 = M x 1
 
             # Cost function
             log_likelihood = np.sum(np.log(p_sum + EPSILON_STABILITY))
