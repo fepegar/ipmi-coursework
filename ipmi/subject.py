@@ -19,6 +19,7 @@ T1 = '_t1'
 LABEL_MAP = '_label_map'
 AGE = '_age'
 SEGMENTATION = '_segmentation'
+MANUAL = '_manual'
 PRIORS = '_priors'
 
 
@@ -88,7 +89,7 @@ class Subject:
 
     def get_label_map_on_template_path(self, template):
         res_path = self.resampled_dir / (
-            self.id + LABEL_MAP + f'_on_{template.id}' + NII_EXT)
+            self.id + SEGMENTATION + MANUAL + f'_on_{template.id}' + NII_EXT)
         return res_path
 
 
@@ -145,7 +146,7 @@ class SegmentedSubject(Subject):
         super().__init__()
 
         self.segmentation_manual_path = self.dir / (
-            self.id + SEGMENTATION + '_manual' + NII_EXT)
+            self.id + SEGMENTATION + MANUAL + NII_EXT)
         self.brain_mask_path = self.dir / (self.id + '_brain_mask' + NII_EXT)
         self.t1_masked_path = self.dir / (self.id + T1 + '_masked' + NII_EXT)
 
