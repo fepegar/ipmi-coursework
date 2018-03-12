@@ -5,6 +5,7 @@ from scipy.ndimage import convolve, generate_binary_structure
 
 from . import nifti
 from .path import ensure_dir
+from . import constants as const
 
 # From the workshop
 COEF_VARIANCES_1 = 10
