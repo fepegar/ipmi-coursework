@@ -72,9 +72,9 @@ class SegmentationPipeline:
                 process.join()
 
 
-    def propagate_priors(self, force=False):
+    def propagate_priors(self, non_linear=True, force=False):
         for subject in self.subjects:
-            subject.propagate_priors()
+            subject.propagate_priors(non_linear=non_linear, force=force)
 
 
     def segment(self, force=False):
@@ -124,7 +124,7 @@ def main():
     force = True
     pipeline = SegmentationPipeline()
     pipeline.register_template_to_subjects(force=force)
-    pipeline.propagate_priors(force=force)
+    pipeline.propagate_priors(non_linear=True, force=force)
     pipeline.segment(force=force)
     pipeline.dice()
 
