@@ -218,10 +218,14 @@ class RegisterGroupwiseIterativePipeline:
         affine_template.make_default()
 
 
-    def save_collages_gif(self, output_path, delay=50):
+    def save_collages_gif(self, output_path, delay=50, bounce=False):
+        if bounce:
+            collages = self.collages_paths + list(reversed(self.collages_paths))
+        else:
+            collages = self.collages_paths
         cmd = ['convert']  # ImageMagick
         cmd += ['-delay', str(delay)]
-        cmd += self.collages_paths
+        cmd += collages
         cmd += [output_path]
         try:
             call(cmd)
@@ -238,6 +242,8 @@ def main():
     pipeline.create_templates_affine(
         iterations=20, use_masked=False, force=force)
     pipeline.save_collages_gif(path.templates_gif_path, delay=20)
+    pipeline.save_collages_gif(path.templates_gif_reflect_path,
+                               delay=5, bounce=True)
 
 
 if __name__ == '__main__':

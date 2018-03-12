@@ -18,7 +18,8 @@ templates_dir = output_dir / 'templates'
 segmented_subjects_dir = subjects_dir / 'segmented'
 unsegmented_subjects_dir = subjects_dir / 'unsegmented'
 
-templates_gif_path = templates_dir / 'evolution.gif'
+templates_gif_path = templates_dir / 'template_evolution.gif'
+templates_gif_reflect_path = templates_dir / 'template_evolution_reflect.gif'
 dice_report_path = output_dir / 'dice_scores.csv'
 correlations_report_path = output_dir / 'correlations.csv'
 
