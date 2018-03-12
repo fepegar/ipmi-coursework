@@ -4,6 +4,7 @@ import numpy as np
 import nibabel as nib
 from scipy.ndimage import convolve, generate_binary_structure
 
+from . import nifti
 from .path import ensure_dir
 
 # From the workshop
@@ -16,7 +17,7 @@ EPSILON_STABILITY = np.spacing(1)
 
 
 def get_brain_mask_from_label_map(label_map_path, brain_mask_path):
-    nii = nib.load(str(label_map_path))
+    nii = nifti.load(label_map_path)
     data = nii.get_data()
     brain = (data > 0).astype(np.uint8)
     nii = nib.Nifti1Image(brain, nii.affine)
@@ -43,13 +44,31 @@ def dice_score(array1, array2):
     return score
 
 
-def get_volume(image_path):
+def label_map_dice_scores(image_path1, image_path2):
+    data1 = nib.load(str(image_path1)).get_data()
+    data2 = nib.load(str(image_path2)).get_data()
+    labels1 = np.unique(data1)
+    labels2 = np.unique(data2)
+    if not np.all(np.equal(labels1, labels2)):
+        raise ValueError(f'{image_path1} and {image_path2} '
+                         'have different labels')
+    scores = {}
+    for label in labels1:
+        scores[label] = dice_score(data1 == label, data2 == label)
+    return scores
+
+
+def get_label_map_volumes(image_path):
     nii = nib.load(str(image_path))
-    N = np.count_nonzero(nii.get_data())
     dims = nii.header['pixdim'][1:4]
     voxel_volume = np.prod(dims)
-    total_volume = N * voxel_volume
-    return total_volume
+    data = nii.get_data()
+    volumes = {}
+    for label in np.unique(data):
+        N = np.count_nonzero(nii.get_data())
+        total_volume = N * voxel_volume
+        volumes[label] = total_volume
+    return volumes
 
 
 
@@ -212,17 +231,19 @@ class ExpectationMaximisation:
         return Results(probabilities=p, costs=costs)
 
 
-    def write_labels(self, probabilities, segmentation_paths_map):
-        for tissue, seg_path in segmentation_paths_map.items():
-            binary = (probabilities[..., tissue] > 0.5).astype(np.uint8)
-            nii = nib.Nifti1Image(binary, self.image_nii.affine)
-            ensure_dir(seg_path)
-            nib.save(nii, str(seg_path))
+    def write_labels(self, probabilities, segmentation_path):
+        label_map = np.zeros_like(probabilities[..., 0], np.uint8)
+        for tissue in range(self.num_classes):
+            mask_data = probabilities[..., tissue] > 0.5
+            label_map[mask_data] = tissue
+        nii = nib.Nifti1Image(label_map, self.image_nii.affine)
+        ensure_dir(segmentation_path)
+        nib.save(nii, str(segmentation_path))
 
 
-    def run(self, segmentation_paths_map, costs_path=None):
+    def run(self, segmentation_path, costs_path=None):
         probabilities, costs = self.run_em()
-        self.write_labels(probabilities, segmentation_paths_map)
+        self.write_labels(probabilities, segmentation_path)
         if costs_path is not None:
             ensure_dir(costs_path)
             np.save(str(costs_path), costs)

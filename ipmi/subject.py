@@ -58,20 +58,8 @@ class Subject:
             WHITE_MATTER: self.priors_wm_path,
         }
 
-        self.segmentation_background_path = self.segmentation_dir / (
-            self.id + SEGMENTATION + '_background' + NII_EXT)
-        self.segmentation_csf_path = self.segmentation_dir / (
-            self.id + SEGMENTATION + '_csf' + NII_EXT)
-        self.segmentation_gm_path = self.segmentation_dir / (
-            self.id + SEGMENTATION + '_gm' + NII_EXT)
-        self.segmentation_wm_path = self.segmentation_dir / (
-            self.id + SEGMENTATION + '_wm' + NII_EXT)
-        self.segmentation_paths_map = {
-            BACKGROUND: self.segmentation_background_path,
-            CSF: self.segmentation_csf_path,
-            GREY_MATTER: self.segmentation_gm_path,
-            WHITE_MATTER: self.segmentation_wm_path,
-        }
+        self.segmentation_em_path = self.segmentation_dir / (
+            self.id + SEGMENTATION + '_automatic' + NII_EXT)
 
         self.segmentation_costs_path = self.segmentation_dir / 'costs.npy'
 
@@ -104,30 +92,30 @@ class Subject:
         return res_path
 
 
-    def propagate_priors(self):
+    def propagate_priors(self, non_linear=True, force=False):
         ref_path = self.t1_path
-        aff_path = self.template_to_t1_affine_ff_path
+        if non_linear:
+            aff_path = self.template_to_t1_affine_ff_path
+        else:
+            aff_path = self.template_to_t1_affine_path
         template = get_final_template()
         zipped = zip(template.priors_paths_map.values(),
                      self.priors_paths_map.values())
         for flo_path, res_path in zipped:
-            reg.resample(flo_path, ref_path, aff_path, res_path,
-                         interpolation=reg.LINEAR)
+            if not res_path.is_file() or force:
+                reg.resample(flo_path, ref_path, aff_path, res_path,
+                             interpolation=reg.LINEAR)
 
 
     def segment(self):
         em = seg.ExpectationMaximisation(self.t1_path,
                                          priors_paths_map=self.priors_paths_map)
-        em.run(self.segmentation_paths_map,
-               costs_path=self.segmentation_costs_path)
+        return em.run(self.segmentation_em_path,
+                      costs_path=self.segmentation_costs_path)
 
 
     def get_tissues_volumes(self):
-        volumes = {}
-        for tissue, image_path in self.segmentation_paths_map.items():
-            if tissue == 0:  # ignore background
-                continue
-            volumes[tissue] = seg.get_volume(image_path)
+        volumes = seg.get_label_map_volumes(self.segmentation_em_path)
         csf = volumes[CSF]
         gm = volumes[GREY_MATTER]
         wm = volumes[WHITE_MATTER]
@@ -151,22 +139,23 @@ class Subject:
 
 class SegmentedSubject(Subject):
 
-    def __init__(self, subject_id, t1_path=None, label_map_path=None):
+    def __init__(self, subject_id, t1_path=None, segmentation_manual_path=None):
         self.id = subject_id
         self.dir = path.segmented_subjects_dir / self.id
         super().__init__()
 
-        self.label_map_path = self.dir / (self.id + LABEL_MAP + NII_EXT)
+        self.segmentation_manual_path = self.dir / (
+            self.id + SEGMENTATION + '_manual' + NII_EXT)
         self.brain_mask_path = self.dir / (self.id + '_brain_mask' + NII_EXT)
         self.t1_masked_path = self.dir / (self.id + T1 + '_masked' + NII_EXT)
 
         if t1_path is not None:
             self.import_t1(t1_path)
 
-        if label_map_path is not None:
-            if not self.label_map_path.is_file():
-                path.ensure_dir(self.label_map_path)
-                self.label_map_path.symlink_to(label_map_path)
+        if segmentation_manual_path is not None:
+            if not self.segmentation_manual_path.is_file():
+                path.ensure_dir(self.segmentation_manual_path)
+                self.segmentation_manual_path.symlink_to(segmentation_manual_path)
 
 
     def __repr__(self):
@@ -175,7 +164,7 @@ class SegmentedSubject(Subject):
 
     def make_brain_mask(self, force=False):
         if not self.brain_mask_path.is_file() or force:
-            seg.get_brain_mask_from_label_map(self.label_map_path,
+            seg.get_brain_mask_from_label_map(self.segmentation_manual_path,
                                               self.brain_mask_path)
 
 
@@ -186,21 +175,13 @@ class SegmentedSubject(Subject):
 
     def dice_scores(self):
         DiceScores = namedtuple('DiceScores',
-                                ['grey_matter', 'white_matter', 'csf'])
-        manual_segmentation = nib.load(str(self.label_map_path)).get_data()
-        scores = {}
-        for tissue, image_path in self.segmentation_paths_map.items():
-            if tissue == BACKGROUND:  # ignore background
-                continue
-            tissue_manual = manual_segmentation == tissue
-            tissue_automatic = nib.load(str(image_path)).get_data()
-            score = seg.dice_score(tissue_manual, tissue_automatic)
-            scores[tissue] = score
-        csf = scores[CSF]
-        gm = scores[GREY_MATTER]
-        wm = scores[WHITE_MATTER]
-        scores = DiceScores(csf=csf, grey_matter=gm, white_matter=wm)
-        return scores
+                                ['csf', 'grey_matter', 'white_matter'])
+        scores_dict = seg.label_map_dice_scores(self.segmentation_manual_path,
+                                                self.segmentation_em_path)
+        scores_tuple = DiceScores(csf=scores_dict[CSF],
+                                  grey_matter=scores_dict[GREY_MATTER],
+                                  white_matter=scores_dict[WHITE_MATTER])
+        return scores_tuple
 
 
 
