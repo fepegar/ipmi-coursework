@@ -52,7 +52,7 @@ def register(ref_path, flo_path, trsf_path=None, res_path=None,
 def register_free_form(ref_path, flo_path, init_trsf_path,
                        trsf_path=None, res_path=None,
                        ref_mask_path=None, flo_mask_path=None,
-                       bending_energy=const.DEFAULT_BENDING_ENERGY):
+                       bending_energy=const.BENDING_ENERGY_DEFAULT):
     cleanup = []
     if trsf_path is None:
         trsf_path = get_temp_path('.nii.gz')
