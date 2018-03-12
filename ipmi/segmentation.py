@@ -185,8 +185,8 @@ class ExpectationMaximisation:
                 self.means[k] = num / den
 
                 # Update variances
-                aux = (y - self.means[k])**2
-                num = (p[..., k] * aux).sum()
+                sq_diffs = (y - self.means[k])**2
+                num = (p[..., k] * sq_diffs).sum()
                 den = p[..., k].sum() + EPSILON_STABILITY
                 self.variances[k] = num / den
 
