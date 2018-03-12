@@ -61,8 +61,9 @@ def get_label_map_volumes(image_path):
     voxel_volume = nifti.get_voxel_volume(nii)
     data = nii.get_data()
     volumes = {}
-    for label in np.unique(data):
-        N = np.count_nonzero(nii.get_data())
+    labels = np.unique(data)
+    for label in labels:
+        N = np.count_nonzero(data == label)
         total_volume = N * voxel_volume
         volumes[label] = total_volume
     return volumes
