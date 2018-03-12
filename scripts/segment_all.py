@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-""" Priors propagation pipeline.
+""" Segmentation pipeline.
 
 This script performs the priors propagation by registering the template image to
 each of the unsegmented images and applying the transformations to the priors
-images.
+images. After that, the Expectation-Maximisation segmentation
+algorithm is performed on every subject.
 """
 
 import csv
@@ -19,8 +20,8 @@ from ipmi import registration as reg
 
 
 
-class PropagatePriorsPipeline:
-    """Pipeline for priors propagation"""
+class SegmentationPipeline:
+    """Pipeline for subjects segmentation"""
     def __init__(self):
         self.subjects = ipmi.get_segmented_subjects()
         self.subjects.extend(ipmi.get_unsegmented_subjects())
@@ -121,7 +122,7 @@ class PropagatePriorsPipeline:
 
 def main():
     force = True
-    pipeline = PropagatePriorsPipeline()
+    pipeline = SegmentationPipeline()
     pipeline.register_template_to_subjects(force=force)
     pipeline.propagate_priors(force=force)
     pipeline.segment(force=force)
