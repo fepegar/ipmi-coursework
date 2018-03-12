@@ -1,7 +1,6 @@
 from collections import namedtuple
 
 import numpy as np
-import nibabel as nib
 from scipy.ndimage import convolve, generate_binary_structure
 
 from . import nifti
@@ -11,9 +10,10 @@ from .path import ensure_dir
 COEF_VARIANCES_1 = 10
 COEF_VARIANCES_2 = 0.8
 
-MAX_ITERATIONS = 100
+MAX_ITERATIONS = 30
 EPSILON_STABILITY = np.spacing(1)
 
+np.random.seed(0)  # for reproducibility
 
 
 def get_brain_mask_from_label_map(label_map_path, brain_mask_path):
@@ -120,13 +120,18 @@ class ExpectationMaximisation:
     def get_means_and_variances_from_priors(self, image_data, priors):
         means = np.empty(self.num_classes)
         variances = np.empty(self.num_classes)
-        for k in range(self.num_classes):
-            pik = priors[..., k]
-            mean = np.sum(pik * image_data) / np.sum(pik)
-            sq_diff = (image_data - mean)**2
-
-            means[k] = mean
-            variances[k] = np.sum(pik * sq_diff) / np.sum(pik)
+        weighted_sums = (priors * image_data[..., np.newaxis]).sum(axis=(0, 1, 2))
+        sums = priors.sum(axis=(0, 1, 2))
+        means = weighted_sums / sums
+        sq_diffs = (image_data[..., np.newaxis] - means)**2
+        variances = (priors * sq_diffs).sum(axis=(0, 1, 2)) / sums
+        # for k in range(self.num_classes):
+        #     pik = priors[..., k]
+        #     mean = np.sum(pik * image_data) / np.sum(pik)
+        #     sq_diff = (image_data - mean)**2
+        #
+        #     means[k] = mean
+        #     variances[k] = np.sum(pik * sq_diff) / np.sum(pik)
         return means, variances
 
 
@@ -164,37 +169,34 @@ class ExpectationMaximisation:
             print('\nMeans:', self.means.astype(int))
             print('Variances:', self.variances.astype(int))
 
-            # Expectation
-            p_sum = np.zeros_like(y)
-            for k in range(K):
-                # Eq (1) of Van Leemput 1
-                p[..., k] = self.gaussian(y - self.means[k],
-                                          self.variances[k])
-                if self.priors is not None:
-                    p[..., k] *= self.priors[..., k]
-
-                p[..., k] *= mrf[..., k]
-                p_sum += p[..., k]
+            ## Expectation
+            # Eq (1) of Van Leemput 1
+            p = self.gaussian(y[..., np.newaxis] - self.means,
+                              self.variances)
+            if self.priors is not None:
+                p *= self.priors
+            p *= mrf
+            p_sum = p.sum(axis=3)
 
             # Normalise posterior (Eq (2) of Van Leemput 1)
-            for k in range(K):
-                p[..., k] /= p_sum + EPSILON_STABILITY
+            p /= p.sum(axis=3)[..., np.newaxis] + EPSILON_STABILITY
 
-            # Maximisation
-            for k in range(K):
-                # Update means (Eq (3) of Van Leemput 1)
-                num = (p[..., k] * y).sum()
-                den = p[..., k].sum() + EPSILON_STABILITY
-                self.means[k] = num / den
 
-                # Update variances (Eq (4) of Van Leemput 1)
-                sq_diffs = (y - self.means[k])**2
-                num = (p[..., k] * sq_diffs).sum()
-                den = p[..., k].sum() + EPSILON_STABILITY
-                self.variances[k] = num / den
+            ## Maximisation
+            # Update means (Eq (3) of Van Leemput 1)
+            num = (p * y[..., np.newaxis]).sum(axis=(0, 1, 2))
+            den = p.sum(axis=(0, 1, 2)) + EPSILON_STABILITY
+            self.means = num / den
 
-                # Update MRF
-                mrf[..., k] = np.exp(-self.beta * self.umrf(p, k))
+            # Update variances (Eq (4) of Van Leemput 1)
+            sq_diffs = (y[..., np.newaxis] - self.means)**2
+            num = (p * sq_diffs).sum(axis=(0, 1, 2))
+            den = p.sum(axis=(0, 1, 2)) + EPSILON_STABILITY
+            self.variances = num / den
+
+            # Update MRF
+            for j in range(K):
+                mrf[..., j] = np.exp(-self.beta * self.umrf(p, j))
 
             # Cost function
             log_likelihood = np.sum(np.log(p_sum + EPSILON_STABILITY))
