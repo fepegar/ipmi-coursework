@@ -71,12 +71,16 @@ def get_label_map_volumes(image_path):
 class ExpectationMaximisation:
 
     def __init__(self, image_path, num_classes=None,
-                 priors_paths_map=None, beta=0.5, epsilon_convergence=1e-4):
+                 priors_paths_map=None, beta=const.BETA_DEFAULT,
+                 epsilon_convergence=const.EPSILON_CONVERGENCE_DEFAULT,
+                 write_intermediate=False, segmentation_path=None):
         self.image_nii = nifti.load(image_path)
         self.image_data = self.image_nii.get_data().astype(float)
         self.epsilon_convergence = epsilon_convergence
         self.beta = beta
         self.priors = None
+        self.write_intermediate = write_intermediate
+        self.segmentation_path = segmentation_path
         if priors_paths_map is None:
             if num_classes is None:
                 raise ValueError('The number of classes must be specified')
@@ -125,13 +129,6 @@ class ExpectationMaximisation:
         means = weighted_sums / sums
         sq_diffs = (image_data[..., np.newaxis] - means)**2
         variances = (priors * sq_diffs).sum(axis=(0, 1, 2)) / sums
-        # for k in range(self.num_classes):
-        #     pik = priors[..., k]
-        #     mean = np.sum(pik * image_data) / np.sum(pik)
-        #     sq_diff = (image_data - mean)**2
-        #
-        #     means[k] = mean
-        #     variances[k] = np.sum(pik * sq_diff) / np.sum(pik)
         return means, variances
 
 
@@ -141,15 +138,15 @@ class ExpectationMaximisation:
         return a * b
 
 
-    def umrf(self, pik, k_class):
+    def u_mrf(self, pik, k_class):
         # MRF energy function
         G = -np.eye(self.num_classes) + 1
-        umrf = np.zeros_like(pik[..., 0])
+        u_mrf = np.zeros_like(pik[..., 0])
         kernel = generate_binary_structure(3, 1)
         kernel[1, 1, 1] = 0
         for j_class in range(self.num_classes):
-            umrf += convolve(pik[..., j_class], kernel) * G[k_class, j_class]
-        return umrf
+            u_mrf += convolve(pik[..., j_class], kernel) * G[k_class, j_class]
+        return u_mrf
 
 
     def run_em(self):
@@ -162,14 +159,22 @@ class ExpectationMaximisation:
         mrf = np.ones_like(p)
         np.set_printoptions(precision=0)
 
+        if self.write_intermediate and self.priors is not None:
+            print('Writing initial segmentation (priors)...')
+            segmentation_path = str(self.segmentation_path).replace(
+                '.nii.gz', '_priors.nii.gz')
+            self.write_labels(self.priors, segmentation_path)
+
         iterations = 0
         while iterations < MAX_ITERATIONS:
             print('Iteration number', iterations + 1)
-
             print('\nMeans:', self.means.astype(int))
             print('Variances:', self.variances.astype(int))
 
-            ## Expectation
+
+            ## Expectation ##
+            print('\n-- Expectation --')
+            print('Classifying...')
             # Eq (1) of Van Leemput 1
             p = self.gaussian(y[..., np.newaxis] - self.means,
                               self.variances)
@@ -181,22 +186,32 @@ class ExpectationMaximisation:
             # Normalise posterior (Eq (2) of Van Leemput 1)
             p /= p.sum(axis=3)[..., np.newaxis] + EPSILON_STABILITY
 
+            if self.write_intermediate:
+                print('Writing intermediate results...')
+                segmentation_path = str(self.segmentation_path).replace(
+                    '.nii.gz', f'_iter_{iterations+1}.nii.gz')
+                self.write_labels(p, segmentation_path)
 
-            ## Maximisation
+
+            ## Maximisation ##
+            print('\n-- Maximisation --')
+            print('Updating means...')
             # Update means (Eq (3) of Van Leemput 1)
             num = (p * y[..., np.newaxis]).sum(axis=(0, 1, 2))
             den = p.sum(axis=(0, 1, 2)) + EPSILON_STABILITY
             self.means = num / den
 
+            print('Updating variances...')
             # Update variances (Eq (4) of Van Leemput 1)
             sq_diffs = (y[..., np.newaxis] - self.means)**2
             num = (p * sq_diffs).sum(axis=(0, 1, 2))
             den = p.sum(axis=(0, 1, 2)) + EPSILON_STABILITY
             self.variances = num / den
 
+            print('Updating MRF...')
             # Update MRF
             for j in range(K):
-                mrf[..., j] = np.exp(-self.beta * self.umrf(p, j))
+                mrf[..., j] = np.exp(-self.beta * self.u_mrf(p, j))
 
             # Cost function
             log_likelihood = np.sum(np.log(p_sum + EPSILON_STABILITY))
@@ -240,9 +255,24 @@ class ExpectationMaximisation:
         nifti.save(label_map, self.image_nii.affine, segmentation_path)
 
 
-    def run(self, segmentation_path, costs_path=None):
+    def run(self, segmentation_path, costs_path=None, costs_plot_path=None):
+        self.segmentation_path = segmentation_path
         probabilities, costs = self.run_em()
         self.write_labels(probabilities, segmentation_path)
         if costs_path is not None:
             ensure_dir(costs_path)
             np.save(str(costs_path), costs)
+
+        if costs_plot_path is not None:
+            import matplotlib as mpl
+            mpl.use('TkAgg')
+            from matplotlib.pyplot import figure
+            fig = figure()
+            axis = fig.gca()
+            axis.set_title('Cost vs iterations')
+            axis.set_xlabel('Iterations')
+            axis.set_ylabel('Cost')
+            axis.grid(True)
+            axis.set_yscale('log')
+            axis.plot(costs)
+            fig.savefig(costs_plot_path, dpi=400)
