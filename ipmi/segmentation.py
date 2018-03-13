@@ -151,6 +151,38 @@ class ExpectationMaximisation:
         return u_mrf
 
 
+    def get_bases_matrix(self, image, order):
+        grid = np.meshgrid(*map(range, image.shape))
+
+        bases = []
+        bases.append(lambda x, y, z: np.ones_like(x))
+        if order >= 1:
+            bases.append(lambda x, y, z: x)
+            bases.append(lambda x, y, z: y)
+            bases.append(lambda x, y, z: z)
+        if order >= 2:
+            bases.append(lambda x, y, z: x**2)
+            bases.append(lambda x, y, z: y**2)
+            bases.append(lambda x, y, z: z**2)
+            bases.append(lambda x, y, z: x * y)
+            bases.append(lambda x, y, z: x * z)
+            bases.append(lambda x, y, z: y * z)
+        if order >= 3:
+            bases.append(lambda x, y, z: x**3)
+            bases.append(lambda x, y, z: y**3)
+            bases.append(lambda x, y, z: z**3)
+            bases.append(lambda x, y, z: x**2 * y)
+            bases.append(lambda x, y, z: x**2 * z)
+            bases.append(lambda x, y, z: y**2 * x)
+            bases.append(lambda x, y, z: y**2 * z)
+            bases.append(lambda x, y, z: z**2 * x)
+            bases.append(lambda x, y, z: z**2 * y)
+            bases.append(lambda x, y, z: x * y * z)
+
+        columns = np.column_stack([basis(*grid).ravel() for basis in bases])
+        return columns  # N x M
+
+
     def run_em(self):
         y = self.image_data
         K = self.num_classes
@@ -159,7 +191,8 @@ class ExpectationMaximisation:
         p = np.empty(p_shape)
         old_log_likelihood = -np.inf
         mrf = np.ones_like(p)
-        BF = 0
+        A = self.get_bases_matrix(y, 2)  # N x M
+        BF = np.zeros_like(y)
 
         np.set_printoptions(precision=0)
 
@@ -181,7 +214,7 @@ class ExpectationMaximisation:
             print('Classifying...')
 
             # Eq (1) of Van Leemput 1
-            p = self.gaussian(y[..., np.newaxis] - self.means - BF,
+            p = self.gaussian(y[..., np.newaxis] - self.means - BF[..., np.newaxis],
                               self.variances)
             if self.priors is not None:
                 p *= self.priors
@@ -226,9 +259,6 @@ class ExpectationMaximisation:
             W = np.diag(w_i.ravel())  # N x N
             # predicted signal
             y_tilde = (weights * self.means).sum(axis=3) / weights.sum(axis=3)
-            M = 11  # number of basis
-            N = y.size
-            A = np.empty((N, M))  # N x M
             At = A.T  # M x N
             R = (y - y_tilde).reshape(-1, 1)  # N x 1
             WR = np.matmul(W, R)  # NxN x Nx1 = N x 1
@@ -236,6 +266,7 @@ class ExpectationMaximisation:
             WA = np.matmul(W, A)  # NxN x NxM = N x M
             AtWA = np.matmul(At, WA)  # MxN x NxM = M x M
             C = np.matmul(np.linalg.inv(AtWA), AtWR)  # ¿MxM? x Mx1 = M x 1
+            BF = np.matmul(A, C).reshape(y.shape)
 
             # Cost function
             log_likelihood = np.sum(np.log(p_sum + EPSILON_STABILITY))
