@@ -9,10 +9,6 @@ import ipmi
 from ipmi.constants import GREY_MATTER, WHITE_MATTER, BRAIN
 
 def compute_and_write_row(writer, x, y, name):
-    print(name)
-    print(x)
-    print(y)
-    print()
     cc, p = pearsonr(x, y)
     writer.writerow(
         {'Measurement': name, 'Pearson CC': f'{cc:.2f}', 'p': f'{p:.3f}'})
