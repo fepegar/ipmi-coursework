@@ -73,17 +73,19 @@ def get_label_map_volumes(image_path):
 
 class ExpectationMaximisation:
 
-    def __init__(self, image_path, num_classes=None,
-                 priors_paths_map=None, beta=const.BETA_DEFAULT,
-                 epsilon_convergence=const.EPSILON_CONVERGENCE_DEFAULT,
-                 write_intermediate=False, segmentation_path=None):
+    def __init__(self, image_path, priors_paths_map=None, num_classes=None,
+                 write_intermediate=False, segmentation_path=None,
+                 use_mrf=True, use_bias_correction=True):
         self.image_nii = nifti.load(image_path)
         self.image_data = self.image_nii.get_data().astype(float)
-        self.epsilon_convergence = epsilon_convergence
-        self.beta = beta
+        self.epsilon_convergence = const.EPSILON_CONVERGENCE_DEFAULT
+        self.use_mrf = use_mrf
+        self.use_bias_correction = use_bias_correction
+        self.beta = const.BETA_DEFAULT
         self.priors = None
         self.write_intermediate = write_intermediate
         self.segmentation_path = segmentation_path
+
         if priors_paths_map is None:
             if num_classes is None:
                 raise ValueError('The number of classes must be specified')
@@ -98,6 +100,22 @@ class ExpectationMaximisation:
             m, v = self.get_means_and_variances_from_priors(self.image_data,
                                                             self.priors)
             self.means, self.variances = m, v
+
+
+    def set_beta(self, beta):
+        self.beta = beta
+
+
+    def set_convergence_threshold(self, epsilon):
+        self.epsilon_convergence = epsilon
+
+
+    def set_use_mrf(self, use):
+        self.use_mrf = use
+
+
+    def set_use_bias_correction(self, use):
+        self.use_bias_correction = use
 
 
     def read_priors(self, priors_paths_map):
@@ -184,6 +202,25 @@ class ExpectationMaximisation:
         return columns  # N x M
 
 
+    def get_bias_field(self, probabilities):
+        weights = probabilities / self.variances
+        w_i = weights.sum(axis=3)
+        W = diags(w_i.ravel())  # N x N
+
+        # predicted signal
+        y_tilde = (weights * self.means).sum(axis=3) \
+                  / (weights.sum(axis=3) + EPSILON_STABILITY)
+        At = A.T  # M x N
+        R = (self.image_data - y_tilde).reshape(-1, 1)  # N x 1
+        WR = W.dot(R)  # NxN x Nx1 = N x 1
+        AtWR = np.matmul(At, WR)  # MxN x Nx1 = M x 1
+        WA = W.dot(A)  # NxN x NxM = N x M
+        AtWA = np.matmul(At, WA)  # MxN x NxM = M x M
+        C = np.matmul(np.linalg.inv(AtWA), AtWR)  # ¿MxM? x Mx1 = M x 1
+        BF = np.matmul(A, C).reshape(y.shape)
+        return BF
+
+
     def run_em(self):
         y = self.image_data
         K = self.num_classes
@@ -235,41 +272,32 @@ class ExpectationMaximisation:
 
             ## Maximisation ##
             # "class distribution parameter estimation"
+
+            # Update means (Eq (3) of Van Leemput 1)
             print('\n-- Maximisation --')
             print('Updating means...')
-            # Update means (Eq (3) of Van Leemput 1)
             num = (p * y[..., np.newaxis]).sum(axis=(0, 1, 2))
             den = p.sum(axis=(0, 1, 2)) + EPSILON_STABILITY
             self.means = num / den
 
-            print('Updating variances...')
             # Update variances (Eq (4) of Van Leemput 1)
+            print('Updating variances...')
             sq_diffs = (y[..., np.newaxis] - self.means)**2
             num = (p * sq_diffs).sum(axis=(0, 1, 2))
             den = p.sum(axis=(0, 1, 2)) + EPSILON_STABILITY
             self.variances = num / den
 
-            print('Updating MRF...')
             # Update MRF
-            for j in range(K):
-                mrf[..., j] = np.exp(-self.beta * self.u_mrf(p, j))
+            if self.use_mrf:
+                print('Updating MRF...')
+                for j in range(K):
+                    mrf[..., j] = np.exp(-self.beta * self.u_mrf(p, j))
 
-            print('Updating INU correction coefficients...')
             # Intensity non-uniformity correction #
-            weights = p / self.variances
-            w_i = weights.sum(axis=3)
-            W = diags(w_i.ravel())  # N x N
-            # predicted signal
-            y_tilde = (weights * self.means).sum(axis=3) \
-                      / (weights.sum(axis=3) + EPSILON_STABILITY)
-            At = A.T  # M x N
-            R = (y - y_tilde).reshape(-1, 1)  # N x 1
-            WR = W.dot(R)  # NxN x Nx1 = N x 1
-            AtWR = np.matmul(At, WR)  # MxN x Nx1 = M x 1
-            WA = W.dot(A)  # NxN x NxM = N x M
-            AtWA = np.matmul(At, WA)  # MxN x NxM = M x M
-            C = np.matmul(np.linalg.inv(AtWA), AtWR)  # ¿MxM? x Mx1 = M x 1
-            BF = np.matmul(A, C).reshape(y.shape)
+            if self.use_bias_correction:
+                print('Updating INU correction coefficients...')
+                BF = self.get_bias_field(p)
+
 
             # Cost function
             log_likelihood = np.sum(np.log(p_sum + EPSILON_STABILITY))
