@@ -202,7 +202,7 @@ class ExpectationMaximisation:
         return columns  # N x M
 
 
-    def get_bias_field(self, probabilities):
+    def get_bias_field(self, probabilities, A):
         weights = probabilities / self.variances
         w_i = weights.sum(axis=3)
         W = diags(w_i.ravel())  # N x N
@@ -217,7 +217,7 @@ class ExpectationMaximisation:
         WA = W.dot(A)  # NxN x NxM = N x M
         AtWA = np.matmul(At, WA)  # MxN x NxM = M x M
         C = np.matmul(np.linalg.inv(AtWA), AtWR)  # ¿MxM? x Mx1 = M x 1
-        BF = np.matmul(A, C).reshape(y.shape)
+        BF = np.matmul(A, C).reshape(y.shape)  # sum_k(c_k phi_k(x_i))
         return BF
 
 
@@ -229,7 +229,8 @@ class ExpectationMaximisation:
         p = np.empty(p_shape)
         old_log_likelihood = -np.inf
         mrf = np.ones_like(p)
-        A = self.get_bases_matrix(y, 2)  # N x M
+        if self.use_bias_correction:
+            A = self.get_bases_matrix(y, 2)  # N x M
         BF = np.zeros_like(y)
 
         np.set_printoptions(precision=0)
@@ -276,13 +277,14 @@ class ExpectationMaximisation:
             # Update means (Eq (3) of Van Leemput 1)
             print('\n-- Maximisation --')
             print('Updating means...')
-            num = (p * y[..., np.newaxis]).sum(axis=(0, 1, 2))
+            y_unbiased = y - BF
+            num = (p * y_unbiased[..., np.newaxis]).sum(axis=(0, 1, 2))
             den = p.sum(axis=(0, 1, 2)) + EPSILON_STABILITY
             self.means = num / den
 
             # Update variances (Eq (4) of Van Leemput 1)
             print('Updating variances...')
-            sq_diffs = (y[..., np.newaxis] - self.means)**2
+            sq_diffs = (y_unbiased[..., np.newaxis] - self.means)**2
             num = (p * sq_diffs).sum(axis=(0, 1, 2))
             den = p.sum(axis=(0, 1, 2)) + EPSILON_STABILITY
             self.variances = num / den
@@ -296,7 +298,7 @@ class ExpectationMaximisation:
             # Intensity non-uniformity correction #
             if self.use_bias_correction:
                 print('Updating INU correction coefficients...')
-                BF = self.get_bias_field(p)
+                BF = self.get_bias_field(p, A)
 
 
             # Cost function
