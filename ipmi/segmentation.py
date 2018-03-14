@@ -203,6 +203,7 @@ class ExpectationMaximisation:
 
 
     def get_bias_field(self, probabilities, A):
+        y = self.image_data
         weights = probabilities / self.variances
         w_i = weights.sum(axis=3)
         W = diags(w_i.ravel())  # N x N
@@ -211,7 +212,7 @@ class ExpectationMaximisation:
         y_tilde = (weights * self.means).sum(axis=3) \
                   / (weights.sum(axis=3) + EPSILON_STABILITY)
         At = A.T  # M x N
-        R = (self.image_data - y_tilde).reshape(-1, 1)  # N x 1
+        R = (y - y_tilde).reshape(-1, 1)  # N x 1
         WR = W.dot(R)  # NxN x Nx1 = N x 1
         AtWR = np.matmul(At, WR)  # MxN x Nx1 = M x 1
         WA = W.dot(A)  # NxN x NxM = N x M
@@ -334,10 +335,6 @@ class ExpectationMaximisation:
         Results = namedtuple('EMSegmentationResults',
                              ['probabilities', 'costs'])
         if self.write_intermediate:
-            weights_path = str(self.segmentation_path).replace(
-                '.nii.gz', f'_weights.nii.gz')
-            nifti.save(w_i, self.image_nii.affine, weights_path)
-
             bias_field_path = str(self.segmentation_path).replace(
                 '.nii.gz', f'_bias_field.nii.gz')
             nifti.save(BF, self.image_nii.affine, bias_field_path)
