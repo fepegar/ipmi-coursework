@@ -203,14 +203,13 @@ class ExpectationMaximisation:
 
 
     def get_bias_field(self, probabilities, A):
-        y = self.image_data
-        weights = probabilities / self.variances
-        w_i = weights.sum(axis=3)
-        W = diags(w_i.ravel())  # N x N
-
-        # predicted signal
-        y_tilde = (weights * self.means).sum(axis=3) \
-                  / (weights.sum(axis=3) + EPSILON_STABILITY)
+        y = self.image_data  # si x sj x sk
+        weights = probabilities / self.variances  # si x sj x sk x 4
+        w_i = weights.sum(axis=3)  # si x sj x sk
+        W = diags(w_i.ravel())  # N x N (sparse)
+        num = (weights * self.means).sum(axis=3)
+        den = weights.sum(axis=3) + EPSILON_STABILITY
+        y_tilde = num / den  # predicted signal, si x sj x sk
         At = A.T  # M x N
         R = (y - y_tilde).reshape(-1, 1)  # N x 1
         WR = W.dot(R)  # NxN x Nx1 = N x 1
