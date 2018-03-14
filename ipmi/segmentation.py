@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 import numpy as np
+from scipy.sparse import diags
 from scipy.ndimage import convolve, generate_binary_structure
 
 from . import nifti
@@ -214,8 +215,9 @@ class ExpectationMaximisation:
             print('Classifying...')
 
             # Eq (1) of Van Leemput 1
-            p = self.gaussian(y[..., np.newaxis] - self.means - BF[..., np.newaxis],
-                              self.variances)
+            p = self.gaussian(
+                y[..., np.newaxis] - self.means - BF[..., np.newaxis],
+                self.variances)
             if self.priors is not None:
                 p *= self.priors
             p *= mrf
@@ -256,14 +258,15 @@ class ExpectationMaximisation:
             # Intensity non-uniformity correction #
             weights = p / self.variances
             w_i = weights.sum(axis=3)
-            W = np.diag(w_i.ravel())  # N x N
+            W = diags(w_i.ravel())  # N x N
             # predicted signal
-            y_tilde = (weights * self.means).sum(axis=3) / weights.sum(axis=3)
+            y_tilde = (weights * self.means).sum(axis=3) \
+                      / (weights.sum(axis=3) + EPSILON_STABILITY)
             At = A.T  # M x N
             R = (y - y_tilde).reshape(-1, 1)  # N x 1
-            WR = np.matmul(W, R)  # NxN x Nx1 = N x 1
+            WR = W.dot(R)  # NxN x Nx1 = N x 1
             AtWR = np.matmul(At, WR)  # MxN x Nx1 = M x 1
-            WA = np.matmul(W, A)  # NxN x NxM = N x M
+            WA = W.dot(A)  # NxN x NxM = N x M
             AtWA = np.matmul(At, WA)  # MxN x NxM = M x M
             C = np.matmul(np.linalg.inv(AtWA), AtWR)  # ¿MxM? x Mx1 = M x 1
             BF = np.matmul(A, C).reshape(y.shape)
@@ -298,7 +301,10 @@ class ExpectationMaximisation:
 
         print(5 * '\n')
         np.set_printoptions(precision=8)  # back to default
-        Results = namedtuple('EMSegmentationResults', ['probabilities', 'costs'])
+        Results = namedtuple('EMSegmentationResults',
+                             ['probabilities', 'costs'])
+        nifti.save(w_i, self.image_nii.affine, '/tmp/em/w_i.nii.gz')
+        nifti.save(BF, self.image_nii.affine, '/tmp/em/BF.nii.gz')
         return Results(probabilities=p, costs=costs)
 
 
