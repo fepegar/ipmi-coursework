@@ -1,6 +1,5 @@
-import nipype
 import numpy as np
-import nibabel as nib
+import nipype
 from nipype.interfaces import niftyreg
 
 from . import nifti
@@ -12,7 +11,7 @@ LINEAR = 'LIN'
 CUBIV = 'CUB'
 SINC = 'SINC'
 
-nipype.config.set('logging', 'workflow_level',  'CRITICAL')
+nipype.config.set('logging', 'workflow_level', 'CRITICAL')
 nipype.config.set('logging', 'interface_level', 'CRITICAL')
 nipype.logging.update_logging(nipype.config)
 

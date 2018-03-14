@@ -1,5 +1,4 @@
 import numpy as np
-import nibabel as nib
 from PIL import Image
 
 from . import path
@@ -102,7 +101,6 @@ class Template:
         nii = nifti.load(nii_path)
         data = nii.get_data()
         data = normalise_int(data)
-        si, sj, sk = data.shape
 
         sagittal_slice = data[100, :, :]
         sagittal_slice = np.fliplr(sagittal_slice)

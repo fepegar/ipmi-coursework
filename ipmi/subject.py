@@ -2,10 +2,7 @@ import re
 from copy import copy
 from collections import namedtuple
 
-import nibabel as nib
-
 from . import path
-from . import constants as const
 from . import segmentation as seg
 from . import registration as reg
 from .template import get_final_template
