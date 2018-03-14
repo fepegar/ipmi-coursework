@@ -1,0 +1,9 @@
+[MESSAGES CONTROL]
+disable=
+  no-self-use,
+  too-many-arguments,
+  too-many-locals,
+  too-many-statements,
+  too-many-instance-attributes,
+  missing-docstring,
+  invalid-name
