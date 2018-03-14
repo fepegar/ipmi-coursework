@@ -303,8 +303,15 @@ class ExpectationMaximisation:
         np.set_printoptions(precision=8)  # back to default
         Results = namedtuple('EMSegmentationResults',
                              ['probabilities', 'costs'])
-        nifti.save(w_i, self.image_nii.affine, '/tmp/em/w_i.nii.gz')
-        nifti.save(BF, self.image_nii.affine, '/tmp/em/BF.nii.gz')
+        if self.write_intermediate:
+            weights_path = str(self.segmentation_path).replace(
+                '.nii.gz', f'_weights.nii.gz')
+            nifti.save(w_i, self.image_nii.affine, weights_path)
+
+            bias_field_path = str(self.segmentation_path).replace(
+                '.nii.gz', f'_bias_field.nii.gz')
+            nifti.save(BF, self.image_nii.affine, bias_field_path)
+
         return Results(probabilities=p, costs=costs)
 
 
