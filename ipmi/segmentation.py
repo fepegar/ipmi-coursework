@@ -163,8 +163,13 @@ class ExpectationMaximisation:
         # MRF energy function
         G = -np.eye(self.num_classes) + 1
         u_mrf = np.zeros_like(pik[..., 0])
-        kernel = generate_binary_structure(3, 1)
+
+        # The kernel is a 3D Greek cross...
+        kernel = generate_binary_structure(rank=3, connectivity=1)
+        # ...with an empty center
         kernel[1, 1, 1] = 0
+
+        # This loop can probably be avoided with a 4D kernel
         for j_class in range(self.num_classes):
             u_mrf += convolve(pik[..., j_class], kernel) * G[k_class, j_class]
         return u_mrf
