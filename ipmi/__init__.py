@@ -18,6 +18,10 @@ def get_unsegmented_subjects():
     return subjects
 
 
+def get_all_subjects():
+    return get_segmented_subjects() + get_unsegmented_subjects()
+
+
 def get_subject_by_id(subjects, subject_id):
     for subject in subjects:
         if subject.id == subject_id:
