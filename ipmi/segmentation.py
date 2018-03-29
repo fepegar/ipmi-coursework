@@ -374,6 +374,6 @@ class ExpectationMaximisation:
             axis.grid(True)
             axis.set_yscale('log')
             axis.plot(results.costs, '-o')
-            axis.xticks(range(0, len(results.costs) + 1, 2))
+            axis.set_xticks(range(0, len(results.costs) + 1, 2))
             fig.savefig(costs_plot_path, dpi=400)
         return results
