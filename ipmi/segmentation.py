@@ -34,13 +34,13 @@ def mask(image_path, mask_path, result_path):
 
 
 def dice_score(array1, array2):
-    a = array1.astype(bool)
-    b = array2.astype(bool)
-    TP = (a & b).sum()
-    FP = ((a ^ b) & a).sum()
-    FN = ((a ^ b) & b).sum()
-    score = 2 * TP / (2 * TP + FP + FN)
-    return score
+    X = array1.astype(bool)
+    Y = array2.astype(bool)
+    intersection = np.count_nonzero(X & Y)
+    num_X = np.count_nonzero(X)
+    num_Y = np.count_nonzero(Y)
+    QS = 2 * intersection / (num_X + num_Y)  # "quotient of similarity"
+    return QS
 
 
 def label_map_dice_scores(image_path1, image_path2):
