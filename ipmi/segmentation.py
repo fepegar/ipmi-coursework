@@ -74,7 +74,7 @@ def get_label_map_volumes(image_path):
 class ExpectationMaximisation:
 
     def __init__(self, image_path, priors_paths_map=None, num_classes=None,
-                 write_intermediate=False, segmentation_path=None,
+                 write_intermediate=True, segmentation_path=None,
                  use_mrf=True, use_bias_correction=True):
         self.image_nii = nifti.load(image_path)
         self.image_data = self.image_nii.get_data().astype(float)
@@ -221,7 +221,7 @@ class ExpectationMaximisation:
         AtWR = np.matmul(At, WR)  # MxN x Nx1 = M x 1
         WA = W.dot(A)  # NxN x NxM = N x M
         AtWA = np.matmul(At, WA)  # MxN x NxM = M x M
-        C = np.matmul(np.linalg.inv(AtWA), AtWR)  # ¿MxM? x Mx1 = M x 1
+        C = np.matmul(np.linalg.inv(AtWA), AtWR)  # MxM x Mx1 = M x 1
         BF = np.matmul(A, C).reshape(y.shape)  # sum_k(c_k phi_k(x_i))
         return BF
 
