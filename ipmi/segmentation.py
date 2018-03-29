@@ -107,6 +107,12 @@ class ExpectationMaximisation:
         self.beta = beta
 
 
+    def set_inu_polynomial_order(self, order):
+        if order not in range(4):
+            raise ValueError('Polynomial order must be an integer in [0 .. 3]')
+        self.inu_order = order
+
+
     def set_convergence_threshold(self, epsilon):
         self.epsilon_convergence = epsilon
 
@@ -235,7 +241,7 @@ class ExpectationMaximisation:
         p = np.empty(p_shape)
         old_log_likelihood = -np.inf
         mrf = np.ones_like(p)
-        if self.use_bias_correction:
+        if self.use_bias_correction and self.inu_order > 0:
             A = self.get_bases_matrix(y, self.inu_order)  # N x M
         BF = np.zeros_like(y)
 
@@ -302,7 +308,7 @@ class ExpectationMaximisation:
                     mrf[..., j] = np.exp(-self.beta * self.u_mrf(p, j))
 
             # Intensity non-uniformity correction #
-            if self.use_bias_correction:
+            if self.use_bias_correction and self.inu_order > 0:
                 print('Updating INU correction coefficients...')
                 BF = self.get_bias_field(p, A)
 
