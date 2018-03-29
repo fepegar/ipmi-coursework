@@ -9,5 +9,5 @@
 
 ## Installation
 ```
-pip install git+https://github.com/fepegar/ipmi-coursework.git
+pip install git+https://github.com/fepegar/ipmi-coursework.git#egg=ipmi
 ```
