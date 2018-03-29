@@ -243,7 +243,7 @@ class ExpectationMaximisation:
         if self.write_intermediate and self.priors is not None:
             print('Writing initial segmentation (priors)...')
             segmentation_path = str(self.segmentation_path).replace(
-                '.nii.gz', '_iteration_0_priors.nii.gz')
+                '.nii.gz', '_label_map_iter_0_priors.nii.gz')
             self.write_labels(self.priors, segmentation_path)
 
         iterations = 0
@@ -272,7 +272,7 @@ class ExpectationMaximisation:
             if self.write_intermediate:
                 print('Writing intermediate results...')
                 segmentation_path = str(self.segmentation_path).replace(
-                    '.nii.gz', f'_iter_{iterations+1}.nii.gz')
+                    '.nii.gz', f'_label_map_iter_{iterations+1}.nii.gz')
                 self.write_labels(p, segmentation_path)
 
 

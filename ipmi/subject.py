@@ -57,7 +57,7 @@ class Subject:
         }
 
         self.segmentation_em_path = self.segmentation_dir / (
-            self.id + SEGMENTATION + '_automatic' + NII_EXT)
+            self.id + SEGMENTATION + '_automatic_label_map' + NII_EXT)
 
         self.segmentation_costs_path = self.segmentation_dir / 'costs.npy'
         self.segmentation_costs_plot_path = self.segmentation_dir / 'costs.png'
