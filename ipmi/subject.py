@@ -107,6 +107,8 @@ class Subject:
 
 
     def segment(self):
+        import shutil
+        shutil.rmtree(self.segmentation_dir)
         em = seg.ExpectationMaximisation(self.t1_path,
                                          priors_paths_map=self.priors_paths_map,
                                          write_intermediate=True)
