@@ -85,6 +85,7 @@ class ExpectationMaximisation:
         self.priors = None
         self.write_intermediate = write_intermediate
         self.segmentation_path = segmentation_path
+        self.inu_order = const.INU_ORDER_DEFAULT
 
         if priors_paths_map is None:
             if num_classes is None:
@@ -235,7 +236,7 @@ class ExpectationMaximisation:
         old_log_likelihood = -np.inf
         mrf = np.ones_like(p)
         if self.use_bias_correction:
-            A = self.get_bases_matrix(y, 2)  # N x M
+            A = self.get_bases_matrix(y, self.inu_order)  # N x M
         BF = np.zeros_like(y)
 
         np.set_printoptions(precision=0)
