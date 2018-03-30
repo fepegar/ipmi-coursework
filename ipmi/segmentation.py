@@ -1,8 +1,11 @@
 from collections import namedtuple
 
 import numpy as np
+import matplotlib as mpl
 from scipy.sparse import diags
 from scipy.ndimage import convolve, generate_binary_structure
+mpl.use('TkAgg')
+from matplotlib.pyplot import figure
 
 from . import nifti
 from .path import ensure_dir
@@ -376,9 +379,7 @@ class ExpectationMaximisation:
             np.save(str(costs_path), results.costs)
 
         if costs_plot_path is not None:
-            import matplotlib as mpl
-            mpl.use('TkAgg')
-            from matplotlib.pyplot import figure
+
             fig = figure()
             axis = fig.gca()
             axis.set_title('Cost vs iterations')

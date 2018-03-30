@@ -1,9 +1,11 @@
 from collections import OrderedDict
 
 import numpy as np
+import matplotlib as mpl
 from scipy import interpolate
-import matplotlib.pyplot as plt
 import seaborn as sns
+mpl.use('TkAgg')
+import matplotlib.pyplot as plt
 
 import ipmi
 from ipmi.path import output_dir
