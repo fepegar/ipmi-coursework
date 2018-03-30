@@ -245,8 +245,14 @@ class ExpectationMaximisation:
             A = self.get_bases_matrix(y, self.inu_order)  # N x M
         BF = np.zeros_like(y)
 
-        np.set_printoptions(precision=0)
+        print('**** Running EM segmentation ****')
+        if self.use_bias_correction:
+            print('Bias correction polynomial order:', self.inu_order)
+        if self.use_mrf:
+            print('Beta for MRF smoothing:', self.beta)
+        print()
 
+        np.set_printoptions(precision=0)
         if self.write_intermediate and self.priors is not None:
             print('Writing initial segmentation (priors)...')
             segmentation_path = str(self.segmentation_path).replace(
