@@ -39,6 +39,7 @@ class Template:
             const.WHITE_MATTER: self.priors_wm_path,
         }
         self.collage_path = self.dir / (self.id + '_collage' + PNG_EXT)
+        self.std_path = self.dir / (self.id + '_std' + NII_EXT)
 
 
     def exists(self):
@@ -120,3 +121,17 @@ class Template:
         result = np.vstack([top, bottom])
 
         return result
+
+
+    def make_std_image(self):
+        from . import get_segmented_subjects
+        subjects = get_segmented_subjects()
+        paths = [s.get_image_on_template_path(self) for s in subjects]
+        first = nifti.load(paths[0])
+        images = np.empty(list(first.shape) + [len(paths)])
+
+        for i, path in enumerate(paths):
+            images[..., i] = nifti.load(path).get_data()
+
+        result = images.std(axis=3)
+        nifti.save(result, first.affine, self.std_path)
