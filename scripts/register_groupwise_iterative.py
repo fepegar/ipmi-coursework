@@ -240,7 +240,7 @@ def main():
     pipeline.create_template_rigid(
         reference_id='0', use_masked=False, force=force)
     pipeline.create_templates_affine(
-        iterations=20, use_masked=False, force=force)
+        iterations=10, use_masked=False, force=force)
     pipeline.save_collages_gif(path.templates_gif_path, delay=20)
     pipeline.save_collages_gif(path.templates_gif_reflect_path,
                                delay=5, bounce=True)
