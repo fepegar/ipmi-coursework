@@ -41,7 +41,7 @@ def make_label_map(input_path, central_value, output_path):
 
 
 def main():
-    for be in np.logspace(-3, -1, 10)[:1]:
+    for be in np.logspace(-3, -1, 10):
         # Register
         command = ('reg_f3d -ref 00_t1.nii.gz -flo final_image_on_00.nii.gz '
                    f'-cpp cpp_be_{be:.5f}.nii.gz '
