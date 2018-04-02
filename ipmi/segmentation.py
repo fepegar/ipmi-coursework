@@ -21,6 +21,21 @@ EPSILON_STABILITY = np.spacing(1)
 np.random.seed(0)  # for reproducibility
 
 
+def make_rgb_tpm(priors_paths_map, output_path):
+    csf_nii = nifti.load(priors_paths_map[const.CSF])
+    gm_nii = nifti.load(priors_paths_map[const.GREY_MATTER])
+    wm_nii = nifti.load(priors_paths_map[const.WHITE_MATTER])
+
+    si, sj, sk = csf_nii.shape
+    output_data = np.empty((si, sj, sk, 1, 3), float)
+    output_data[..., 0, 0] = (1 * csf_nii.get_data())
+    output_data[..., 0, 1] = (1 * gm_nii.get_data())
+    output_data[..., 0, 2] = (1 * wm_nii.get_data())
+    nifti.save(output_data, csf_nii.affine, output_path,
+               settings={'set_intent': 'vector'})
+    return output_data
+
+
 def get_brain_mask_from_label_map(label_map_path, brain_mask_path):
     nii = nifti.load(label_map_path)
     data = nii.get_data()
