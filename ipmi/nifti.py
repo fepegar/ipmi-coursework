@@ -8,8 +8,11 @@ def load(path):
     return nii
 
 
-def save(data, affine, path):
+def save(data, affine, path, settings=None):
     nii = nib.Nifti1Image(data, affine)
+    if settings is not None:
+        for method, value in settings.items():
+            getattr(nii.header, method)(value)
     ensure_dir(path)
     nib.save(nii, str(path))
 
