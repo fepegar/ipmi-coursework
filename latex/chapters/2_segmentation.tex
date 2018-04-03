@@ -21,16 +21,41 @@ When the EM loop is finished, each voxel is assigned to the class with the highe
 \begin{figure}
   \centering
   \includegraphics[width=0.7\textwidth]{figures/em_first}
-  \caption{Results of an automatic segmentation. Aproximate classes are: blue - CSF; green - GM; green - WM. The Dice scores compared to the provided segmentation are: 0.38 for CSF, 0.66 for GM and 0.73 for GM.}
+  \caption{Results of an automatic EM segmentation. Approximate classes are: blue - CSF; green - GM; green - WM. The Dice scores compared to the provided segmentation are: 0.38 for CSF, 0.66 for GM and 0.73 for GM.}
   \label{fig:em-first}
 \end{figure}
 
-The uncertainty of the algorithm assigning a voxel $i$ to a class can be measured as $u_i = 1 - \sigma_i$. Figure \ref{fig:em-first-uncertainty} shows the uncertainty for the segmentation of Figure \ref{fig:em-first}. The most certain zones are the background and the inner parts of the WM, while the most uncertain ones are the interfaces between different tissues. TODOOOOOOOOOOOOOOOOO
+The uncertainty of the algorithm assigning a voxel $i$ to a class can be measured as $u_i = 1 - \sigma_i$. Figure \ref{fig:em-first-uncertainty} shows the uncertainty for the segmentation of Figure \ref{fig:em-first}. The most certain zones are the background and the inner parts of the WM, while the most uncertain ones are the interfaces between different tissues.
+% TODO OOOOOOOOOOOOOOOO
+
+
+% TODO: plot gaussians and histogram?
 
 % Use image registration to propagate the previously generated tissue probability maps into the space of the non-segmented brain MRIs. This can be achieved by registering the groupwise mean template to the non- segmented brain and then applying the obtained transformation to the probability maps.
 
+\subsection{Priors}
+In order to use the previously generated TPMs as priors for the GMM, they must be propagated to the subject's space. For that, the template image is non-linearly registered to the subject's $T_1$-weighted MRI and the resulting transform is applied to the TPMs.
+
+% TODO: explain choice of reg_f3d bending energy
+% Since the TPMs and the template have been built with linear registrations only, the same logic must be applied while propagating them. This means that the free-form registration must be flexible enough to adapt to the subject's anatomy while producing a smooth resampled TPM that ensures a certain generalisability.
+
+% TODO: show displacement field and jacobian
 
 % Use then the propagated probability maps as a priori information in your GMM [10]. If you did not complete the previous section, you may use the provided prior files.
+
+Once the TPMs are projected into the subject's space, they can be used as priors within the bayesian framework implemented in the EM algorithm. Adding this spatial a priori leads to better qualitative and cuantitative results, as shown in Figure \ref{fig:em-priors}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{figures/em_priors}
+  \caption{Results of an automatic EM segmentation using TPMs as priors. The different classes are: blue - CSF; green - GM; green - WM. The Dice scores compared to the provided segmentation are: 0.80 for CSF, 0.90 for GM and 0.92 for GM.}
+  \label{fig:em-priors}
+\end{figure}
+
+
+
+
+
 
 % Embed a Markov random field into your segmentation framework to introduce a spatial smoothness term in the label estimation process [10].
 
