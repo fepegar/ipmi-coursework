@@ -378,10 +378,7 @@ class ExpectationMaximisation:
 
 
     def write_labels(self, probabilities, segmentation_path):
-        label_map = np.zeros_like(probabilities[..., 0], np.uint8)
-        for tissue in range(self.num_classes):
-            mask_data = probabilities[..., tissue] > 0.5
-            label_map[mask_data] = tissue
+        label_map = np.argmax(probabilities, axis=3).astype(np.uint8)
         nifti.save(label_map, self.image_nii.affine, segmentation_path)
 
 
