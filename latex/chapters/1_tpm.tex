@@ -15,19 +15,19 @@ The following interpolation methods have been used when applying a transform to 
 \subsubsection{TPMs}
 Linear interpolation has been used to resample a transformed TPM. This ensures that the values that were between 0 and 1 in the source space remain in that range once interpolated into the target space
 
-\subsubsection{T1-weighted images} To resample anatomical images, sinc interpolation has been used so that the interpolation is smooth. Modifying the original values range is not too relevant
+\subsubsection{$T_1$-weighted images} To resample anatomical images, sinc interpolation has been used so that the interpolation is smooth. Modifying the original values range is not too relevant
 
 \subsubsection{Label maps} Since the discrete values of the labels must be preserved, nearest-neighbour interpolation has been used to resample the label maps.
 
 
 
 \subsection{Rigid coregistration}
-First, the T1-weighted image of one segmented subject is taken as reference and the rest of the subjects are registered to the reference one by one using rigid registration, i.e. 6 degrees of freedom (DOF) representing translation and rotation. The floating images are resampled to the reference space and averaged in order to generate the initial version of the template image. For visualisation purposes, the label maps have also been transformed to the reference space and the results have been averaged label by label, yielding an initial version of the TPMs. Figure \ref{fig:template-rigid} shows the results of this initial coregistration step.
+First, the $T_1$-weighted image of one segmented subject is taken as reference and the rest of the subjects are registered to the reference one by one using rigid registration, i.e. 6 degrees of freedom (DOF) representing translation and rotation. The floating images are resampled to the reference space and averaged in order to generate the initial version of the template image. For visualisation purposes, the label maps have also been transformed to the reference space and the results have been averaged label by label, yielding an initial version of the TPMs. Figure \ref{fig:template-rigid} shows the results of this initial coregistration step.
 
 \begin{figure}
   \centering
   \includegraphics[width=0.7\textwidth]{figures/rigid_template_collage}
-  \caption{Results of the rigid coregistration. Top left: mean of the T1-weighted images; top right: TPM of the CSF; bottom left: TPM of the GM; bottom right: TPM of the WM.}
+  \caption{Results of the rigid coregistration. Top left: mean of the $T_1$-weighted images; top right: TPM of the CSF; bottom left: TPM of the GM; bottom right: TPM of the WM.}
   \label{fig:template-rigid}
 \end{figure}
 
@@ -41,7 +41,7 @@ Once a rigid version of the template is created, it can be used as reference for
 \begin{figure}
   \includegraphics[width=0.5\textwidth]{figures/template_sheared}
   \centering
-  \caption{Final template after 10 affine iterations. Top left: mean of the T1-weighted images; top right: TPM of the CSF; bottom left: TPM of the GM; bottom right: TPM of the WM.}
+  \caption{Final template after 10 affine iterations. Top left: mean of the $T_1$-weighted images; top right: TPM of the CSF; bottom left: TPM of the GM; bottom right: TPM of the WM.}
   \label{fig:template-sheared}
 \end{figure}
 
