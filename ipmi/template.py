@@ -47,6 +47,7 @@ class Template:
 
 
     def make_default(self):
+        # TODO: make relative symlinks
         template_final = Template(const.FINAL_TEMPLATE)
         if template_final.dir.is_dir():
             import shutil
