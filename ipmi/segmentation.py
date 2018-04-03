@@ -179,8 +179,8 @@ class ExpectationMaximisation:
 
 
     def gaussian(self, x, variance):
-        a = 1 / np.sqrt(2 * np.pi * variance)
-        b = np.exp(-x**2 / (2 * variance))
+        a = 1 / np.sqrt(2 * np.pi * variance + EPSILON_STABILITY)
+        b = np.exp(-x**2 / (2 * variance + EPSILON_STABILITY))
         return a * b
 
 
