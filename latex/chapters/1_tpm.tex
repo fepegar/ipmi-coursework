@@ -35,7 +35,7 @@ Using only rigid registration for the initial helps reduce the bias of the templ
 
 
 \subsection{Iterative affine coregistration}
-Once a first version of the template is created, it can be used as reference for the following iterations of the coregistration process. This iterative process created a template image and TPMs that were sharper for each iteration, but did not converge to a final result. Up to 10 iterations, the smoothness reduction stopped being visually perceptible. However, the image seem to diverge towards a sheared version of the template after 10 iterations. Figure \ref{fig:template-sheared} shows a comparison between the template image after 10 and 20 iterations and Figure \ref{fig:template-final} shows the final template after 10 affine iterations.
+Once a rigid version of the template is created, it can be used as reference for the following iterations of the coregistration. At each iteration, the transform from the previous step was used for initialisation. This iterative process generated a template image and TPMs that were sharper for each iteration, but did not converge to a final result. Up to 10 iterations, the smoothness reduction stopped being visually perceptible. However, the image seem to diverge towards a sheared version of the template after 10 iterations. Figure \ref{fig:template-sheared} shows a comparison between the template image after 10 and 20 iterations and Figure \ref{fig:template-final} shows the final template after 10 affine iterations.
 
 
 \begin{figure}
