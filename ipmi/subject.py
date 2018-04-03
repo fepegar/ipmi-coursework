@@ -1,4 +1,5 @@
 import re
+import shutil
 from copy import copy
 from collections import namedtuple
 
@@ -106,7 +107,12 @@ class Subject:
                              interpolation=reg.LINEAR)
 
 
-    def segment(self):
+    def segment(self, force=False):
+        if self.segmentation_em_path.exists():
+            if not force:
+                return
+            else:
+                shutil.rmtree(self.segmentation_dir)
         em = seg.ExpectationMaximisation(self.t1_path,
                                          priors_paths_map=self.priors_paths_map,
                                          write_intermediate=True)
