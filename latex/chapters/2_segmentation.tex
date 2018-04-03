@@ -1,1 +1,10 @@
 \section{Tissue segmentation}
+
+% Implement a Gaussian Mixture Model (GMM) to segment the 20 non-segmented MRI brains and optimise your model through an Expectation-Maximisation scheme [15]. Use image registration to propagate the previously generated tissue probability maps into the space of the non-segmented brain MRIs. This can be achieved by registering the groupwise mean template to the non- segmented brain and then applying the obtained transformation to the probability maps. Use then the propagated probability maps as a priori information in your GMM [10]. If you did not complete the previous section, you may use the provided prior files.
+
+In order to perform the tissue classification, an Expectation-Maximisation (EM) algorithm has been developed, as in \cite{leemput_automated_1999-1}.
+
+% Embed a Markov random field into your segmentation framework to introduce a spatial smoothness term in the label estimation process [10].
+% MRI acquisition usually suffers from intensity non-uniformity (INU), improve the robustness of your GMM framework to INU by adding a bias field correction component to the probabilistic model [5].
+% Describe each component of your GMM framework in the report and motivate their use.
+% Use one already segmented images to optimise your implementation parameters (e.g. INU complexity, MRF beta term) [10]. By choosing these parameters, bias can be introduced in the optimisation. Describe one potential bias and propose a solution to avoid it [5]?
