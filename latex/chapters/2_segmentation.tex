@@ -12,11 +12,11 @@ and
 \begin{equation}
   \sigma^2_k = a R + b [\max(y) - \min(y)]
 \end{equation}
-where $\mu_k$ is the mean intensity of class $k$, $y$ is the T1 image, $R$ is a random number between 0 and 1 and $a$ and $b$ are scaling parameters that have been set to 10 and 0.8, respectively.
+where $\mu_k$ is the mean intensity of class $k$, $y$ is the T1 image, $R \sim \mathcal{U}\{0, 1\}$ and $a$ and $b$ are scaling parameters that have been set to 10 and 0.8, respectively.
 
 Once the gaussians parameters have been initialised, the EM loop is run until convergence or until a maximum number of iterations has been reached. The convergence happens when the ratio between the log-likelihood of the current and previous iterations is greater than $1 - \epsilon$, where the convergence threshold $\epsilon$ has been set to $10^{-5}$. The algorithm usually converges around 12 iterations, and the maximum number of iterations has been set to 30. All these parameters are customisable by the user when calling the EM method.
 
-When the EM loop is finished, each voxel is assigned to the class with the highest probability and a label map representing the automatic segmentation is saved. Figure \ref{fig:em-first} shows the results of a segmentation. Since no spatial information is used, the algorithm has assigned voxels outside the brain to be brain tissue, and some voxels are isolated within a different class, which is is not plausible anatomically. Adding TPMs as priors and using Markov random field (MRF) smoothing is necessary to produce a more realistic output.
+When the EM loop is finished, each voxel is assigned to the class with the highest probability and a label map representing the automatic segmentation is saved. Figure \ref{fig:em-first} shows the results of a segmentation. Dice scores are computed comparing each label with the provided label maps, that are used as ground truth. Since no spatial information is used, the algorithm has assigned voxels outside the brain to be brain tissue, and some voxels are isolated within a different class, which is is not plausible anatomically. Adding TPMs as priors and using Markov random field (MRF) smoothing is necessary to produce a more realistic output.
 
 \begin{figure}
   \centering
@@ -26,7 +26,7 @@ When the EM loop is finished, each voxel is assigned to the class with the highe
 \end{figure}
 
 The uncertainty of the algorithm assigning a voxel $i$ to a class can be measured as $u_i = 1 - \sigma_i$. Figure \ref{fig:em-first-uncertainty} shows the uncertainty for the segmentation of Figure \ref{fig:em-first}. The most certain zones are the background and the inner parts of the WM, while the most uncertain ones are the interfaces between different tissues.
-% TODO OOOOOOOOOOOOOOOO
+% TODO: show uncertainty image
 
 
 % TODO: plot gaussians and histogram?
@@ -52,17 +52,39 @@ Once the TPMs are projected into the subject's space, they can be used as priors
   \label{fig:em-priors}
 \end{figure}
 
-
-
-
-
+% TODO: show segmentation with priors. And uncertainty?
 
 % Embed a Markov random field into your segmentation framework to introduce a spatial smoothness term in the label estimation process [10].
 
+% TODO: show segmentation with MRF. Exaplin beta
+
+
 % MRI acquisition usually suffers from intensity non-uniformity (INU), improve the robustness of your GMM framework to INU by adding a bias field correction component to the probabilistic model [5].
+
+% TODO: show INU results. Explain polynomial order, etc
+
 
 % Describe each component of your GMM framework in the report and motivate their use.
 
 % Use one already segmented images to optimise your implementation parameters (e.g. INU complexity, MRF beta term) [10].
 
+A regular parameter grid has been generated in order to sample the parameter space looking for the best Dice scores, using the first segmented subject. The polinomial orders were 0, 1, 2 and 3 and 8 values of $\beta$ in a logarithmic space from 0.01 to 2 have been sampled. Figure \ref{fig:params-optimisation} shows the results of this parameters search. Interpolating the Dice scores using bicubic interpolation shows that a good choice for the polynomials order is 2 or 3, while $\beta$ should be lower than 1 for good scores. Following segmentation experiments have been performed with polynomial order $n = 2$ and MRF weight $\beta = 0.2$.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/parameters_dices}
+  \caption{Contour plots representing Dice scores for the different parameters. The contours are isolines of the scores interpolated using bicubic interpolation. Green dots represented sampled points: blue dots are the highest sampled Dice score; orange dots are the highest interpolated Dice score.}
+  \label{fig:params-optimisation}
+\end{figure}
+
+
 % By choosing these parameters, bias can be introduced in the optimisation. Describe one potential bias and propose a solution to avoid it [5]?
+
+Optimising the segmentation parameters using only data from one subject leads to an overfit towards this subject, as shown in Figure \ref{fig:dices-bars}. If all the subjects were used for the parameters optimisation, the mean Dice score for the whole group would probably be higher.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/dices_bars}
+  \caption{Dice scores for all segmented subjects. The selected parameters seem to work best for subject 0, the one used for the optimisation. These parameters work well with subject 5 as well. Optimising the parameters using all subjects would probably lead to better results.}
+  \label{fig:dices-bars}
+\end{figure}
