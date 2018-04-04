@@ -130,6 +130,17 @@ class SegmentationPipeline:
                              'Mean': mean,
                             })
 
+        with open(path.dice_report_pandas_path, 'w') as csvfile:
+            fieldnames = 'Subject ID', 'Dice score', 'Tissue'
+            tissues = 'CSF', 'Grey matter', 'White matter', 'Mean'
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for row, subject in enumerate(subjects):
+                for col, tissue in enumerate(tissues):
+                    writer.writerow({'Subject ID': subject.id,
+                                     'Dice score': scores_array[row, col],
+                                     'Tissue': tissue,
+                                    })
 
 
 def main():
