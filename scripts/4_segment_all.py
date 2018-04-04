@@ -92,7 +92,7 @@ class SegmentationPipeline:
     def segment(self, force=False):
         for subject in self.subjects:
             print('Segmenting', subject)
-            subject.segment()
+            subject.segment(force=force)
 
 
     def dice(self):
