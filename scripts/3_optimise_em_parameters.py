@@ -12,6 +12,7 @@ from ipmi.path import output_dir
 from ipmi import constants as const
 from ipmi import segmentation as seg
 
+sns.set()
 sns.set_context("paper")
 max_polynomial_order = 3
 
