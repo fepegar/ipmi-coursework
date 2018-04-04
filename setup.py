@@ -11,5 +11,6 @@ setup(name='ipmi',
           'Pillow',
           'matplotlib',
           'seaborn',
+          'pandas',
           ],
      )
