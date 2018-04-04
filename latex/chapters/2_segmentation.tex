@@ -33,7 +33,7 @@ The uncertainty of the algorithm assigning a voxel $i$ to a class can be measure
 
 % Use image registration to propagate the previously generated tissue probability maps into the space of the non-segmented brain MRIs. This can be achieved by registering the groupwise mean template to the non- segmented brain and then applying the obtained transformation to the probability maps.
 
-\subsection{Priors}
+\subsection{Initialisation using tissue priors}
 In order to use the previously generated TPMs as priors for the GMM, they must be propagated to the subject's space. For that, the template image is non-linearly registered to the subject's $T_1$-weighted MRI and the resulting transform is applied to the TPMs.
 
 % TODO: explain choice of reg_f3d bending energy
@@ -54,17 +54,26 @@ Once the TPMs are projected into the subject's space, they can be used as priors
 
 % TODO: show segmentation with priors. And uncertainty?
 
+
+\subsection{Regularisation with Markov random fields}
+
 % Embed a Markov random field into your segmentation framework to introduce a spatial smoothness term in the label estimation process [10].
 
-% TODO: show segmentation with MRF. Exaplin beta
+Noise or bright voxels outside the brain can make the intensity of a voxel different to its neighbors intensities, which may lead to isolated voxels if the a priori probabilities for different classes are similar. Embedding a Markov random field (MRF) into the segmentation helps smoothing the labels, potentially improving the anatomical plausibility of the segmentation. More specifically, a sixth-order Gibbs Random Field has been implemented. The probabilities array is multiplied by $e^{- \beta U_{MRF}(.)}$, where $U_{MRF}$ is the energy function of the MRF and $\beta$ is a weighting parameter used to control the effect of the MRF on the segmentation. Figure \ref{fig:em-mrf} shows the results of a segmentations that include MRF smoothing, for different values of $\beta$. The results show that the labels smoothing increases with $\beta$.
 
+% TODO: show segmentations with MRF. Explain better using literature
+
+
+\subsection{Bias field correction}
 
 % MRI acquisition usually suffers from intensity non-uniformity (INU), improve the robustness of your GMM framework to INU by adding a bias field correction component to the probabilistic model [5].
+
+Since MRI acquisition usually suffers from intensity non-uniformity (INU) due to inhomogeneities in the static magnetic field of the MR scanner, a bias field correction component has been also embedded into the segmentation framework. The bias field is modelled using three-dimensional polynomials whose coefficients are computed using a weighted least-sqaures fit, as in \cite{leemput_automated_1999}.
 
 % TODO: show INU results. Explain polynomial order, etc
 
 
-% Describe each component of your GMM framework in the report and motivate their use.
+\subsection{Parameters optimisation}
 
 % Use one already segmented images to optimise your implementation parameters (e.g. INU complexity, MRF beta term) [10].
 
