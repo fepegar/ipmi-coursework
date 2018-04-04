@@ -165,6 +165,12 @@ class Subject:
         return result
 
 
+    def get_uncertainty_image(self):
+        probabilities = nifti.load(self.probabilities_path)
+        uncertainty = 1 - probabilities.std(axis=3)
+        return uncertainty
+
+
 
 class SegmentedSubject(Subject):
 
