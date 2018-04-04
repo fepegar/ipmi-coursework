@@ -407,7 +407,8 @@ class ExpectationMaximisation:
         nifti.save(label_map, self.image_nii.affine, segmentation_path)
 
 
-    def run(self, segmentation_path, costs_path=None, costs_plot_path=None):
+    def run(self, segmentation_path, costs_path=None, costs_plot_path=None,
+            probabilities_path=None):
         self.segmentation_path = segmentation_path
         results = self.run_em()
         self.write_labels(results.probabilities, segmentation_path)
@@ -416,7 +417,6 @@ class ExpectationMaximisation:
             np.save(str(costs_path), results.costs)
 
         if costs_plot_path is not None:
-
             fig = figure()
             axis = fig.gca()
             axis.set_title('Cost vs iterations')
@@ -427,4 +427,8 @@ class ExpectationMaximisation:
             axis.plot(results.costs, '-o')
             axis.set_xticks(range(0, len(results.costs) + 1, 2))
             fig.savefig(costs_plot_path, dpi=400)
+
+        if probabilities_path is not None:
+            nifti.save(results.probabilities, self.image_nii.affine,
+                       probabilities_path)
         return results

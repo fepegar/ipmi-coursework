@@ -60,7 +60,6 @@ class Subject:
             WHITE_MATTER: self.priors_wm_path,
         }
 
-        ## Segmentation ##
         self.confusion_background_path = self.confusion_dir / (
             self.id + CONFUSION + '_background' + NII_EXT)
         self.confusion_csf_path = self.confusion_dir / (
@@ -78,6 +77,9 @@ class Subject:
 
         self.segmentation_em_path = self.segmentation_dir / (
             self.id + SEGMENTATION + '_automatic_label_map' + NII_EXT)
+
+        self.probabilities_path = self.segmentation_dir / (
+            self.id + '_probabilities' + NII_EXT)
 
         self.segmentation_costs_path = self.segmentation_dir / 'costs.npy'
         self.segmentation_costs_plot_path = self.segmentation_dir / 'costs.png'
@@ -137,7 +139,8 @@ class Subject:
                                          write_intermediate=True)
         return em.run(self.segmentation_em_path,
                       costs_path=self.segmentation_costs_path,
-                      costs_plot_path=self.segmentation_costs_plot_path)
+                      costs_plot_path=self.segmentation_costs_plot_path,
+                      probabilities_path=self.probabilities_path)
 
 
     def get_tissues_volumes(self):
