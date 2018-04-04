@@ -123,10 +123,9 @@ class Subject:
 
     def get_tissues_volumes(self):
         volumes = seg.get_label_map_volumes(self.segmentation_em_path)
-        csf = volumes[CSF]
         gm = volumes[GREY_MATTER]
         wm = volumes[WHITE_MATTER]
-        volumes[BRAIN] = csf + gm + wm
+        volumes[BRAIN] = gm + wm
         return volumes
 
 
