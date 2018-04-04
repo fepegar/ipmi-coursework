@@ -88,6 +88,31 @@ def get_label_map_volumes(image_path):
     return volumes
 
 
+def get_confusion_images(ground_truth_label_map_path, seg_label_map_path):
+    ground_truth_nii = nifti.load(ground_truth_label_map_path)
+    ground_truth = ground_truth_nii.get_data()
+    prediction = nifti.load(seg_label_map_path).get_data()
+    labels1 = np.unique(ground_truth)
+    labels2 = np.unique(prediction)
+    if not np.all(np.equal(labels1, labels2)):
+        raise ValueError(f'{ground_truth_label_map_path} and '
+                         f'{seg_label_map_path} have different labels')
+    images = {}
+    for label in labels1:
+        images[label] = get_confusion_image(ground_truth == label,
+                                            prediction == label)
+    return images
+
+
+def get_confusion_image(ground_truth, prediction):
+    shape = list(ground_truth.shape) + [1, 3]
+    result = np.zeros(shape, np.uint8)
+    result[..., 0, 0] = prediction
+    result[..., 0, 1] = ground_truth
+    result[..., 0, 2] = prediction
+    return result
+
+
 
 class ExpectationMaximisation:
 

@@ -4,6 +4,7 @@ from copy import copy
 from collections import namedtuple
 
 from . import path
+from . import nifti
 from . import segmentation as seg
 from . import registration as reg
 from .template import get_final_template
@@ -19,6 +20,7 @@ AGE = '_age'
 SEGMENTATION = '_segmentation'
 MANUAL = '_manual'
 PRIORS = '_priors'
+CONFUSION = '_confusion'
 
 
 class Subject:
@@ -29,6 +31,7 @@ class Subject:
         self.transforms_dir = self.dir / 'transforms'
         self.resampled_dir = self.dir / 'resampled'
         self.priors_dir = self.dir / 'priors'
+        self.confusion_dir = self.dir / 'confusion'
         self.segmentation_dir = self.dir / 'segmentation'
 
         self.t1_path = self.dir / (self.id + T1 + NII_EXT)
@@ -55,6 +58,22 @@ class Subject:
             CSF: self.priors_csf_path,
             GREY_MATTER: self.priors_gm_path,
             WHITE_MATTER: self.priors_wm_path,
+        }
+
+        ## Segmentation ##
+        self.confusion_background_path = self.confusion_dir / (
+            self.id + CONFUSION + '_background' + NII_EXT)
+        self.confusion_csf_path = self.confusion_dir / (
+            self.id + CONFUSION + '_csf' + NII_EXT)
+        self.confusion_gm_path = self.confusion_dir / (
+            self.id + CONFUSION + '_gm' + NII_EXT)
+        self.confusion_wm_path = self.confusion_dir / (
+            self.id + CONFUSION + '_wm' + NII_EXT)
+        self.confusion_paths_map = {
+            BACKGROUND: self.confusion_background_path,
+            CSF: self.confusion_csf_path,
+            GREY_MATTER: self.confusion_gm_path,
+            WHITE_MATTER: self.confusion_wm_path,
         }
 
         self.segmentation_em_path = self.segmentation_dir / (
@@ -189,6 +208,15 @@ class SegmentedSubject(Subject):
                                   grey_matter=scores_dict[GREY_MATTER],
                                   white_matter=scores_dict[WHITE_MATTER])
         return scores_tuple
+
+
+    def save_confusion_images(self):
+        images = seg.get_confusion_images(self.segmentation_manual_path,
+                                          self.segmentation_em_path)
+        affine = nifti.load(self.t1_path).affine
+        for label, image_path in self.confusion_paths_map.items():
+            nifti.save(images[label], affine, image_path,
+                       settings={'set_intent': 'vector'})
 
 
 
