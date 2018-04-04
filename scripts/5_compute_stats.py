@@ -19,11 +19,12 @@ if __name__ == '__main__':
     ages = [subject.age for subject in subjects]
     volumes_tuples = [subject.get_volumes_normalised() for subject in subjects]
 
-    icvs = [tup.volumes[BRAIN] for tup in volumes_tuples]
     gms = np.array([tup.volumes[GREY_MATTER] for tup in volumes_tuples])
     wms = np.array([tup.volumes[WHITE_MATTER] for tup in volumes_tuples])
+    brains = np.array([tup.volumes[BRAIN] for tup in volumes_tuples])
     gms_norm = [tup.normalised_volumes[GREY_MATTER] for tup in volumes_tuples]
     wms_norm = [tup.normalised_volumes[WHITE_MATTER] for tup in volumes_tuples]
+    brains_norm = [tup.normalised_volumes[BRAIN] for tup in volumes_tuples]
 
     csv_path = ipmi.path.correlations_report_path
 
@@ -31,9 +32,10 @@ if __name__ == '__main__':
         fieldnames = 'Measurement', 'Pearson CC', 'p'
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
-        compute_and_write_row(writer, icvs, ages, 'ICV')
         compute_and_write_row(writer, gms, ages, 'GM')
         compute_and_write_row(writer, wms, ages, 'WM')
+        compute_and_write_row(writer, brains, ages, 'Brain')
         compute_and_write_row(writer, gms_norm, ages, 'GM norm')
         compute_and_write_row(writer, wms_norm, ages, 'WM norm')
+        compute_and_write_row(writer, brains_norm, ages, 'Brain norm')
         compute_and_write_row(writer, gms / wms, ages, 'GM/WM')
