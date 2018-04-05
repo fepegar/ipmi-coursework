@@ -4,6 +4,9 @@ from copy import copy
 from os.path import relpath
 from collections import namedtuple
 
+import numpy as np
+from PIL import Image
+
 from . import path
 from . import nifti
 from . import segmentation as seg
@@ -85,6 +88,8 @@ class Subject:
 
         self.segmentation_costs_path = self.segmentation_dir / 'costs.npy'
         self.segmentation_costs_plot_path = self.segmentation_dir / 'costs.png'
+        self.segmentation_collage_path = self.segmentation_dir / 'collage.png'
+        self.uncertainty_img_path = self.segmentation_dir / 'uncertainty.nii.gz'
 
 
     def __repr__(self):
@@ -167,9 +172,10 @@ class Subject:
         return result
 
 
-    def get_uncertainty_image(self):
+    def make_uncertainty_image(self):
         probabilities = nifti.load(self.probabilities_path)
-        uncertainty = 1 - probabilities.std(axis=3)
+        uncertainty = 1 - probabilities.get_data().std(axis=3)
+        nifti.save(uncertainty, probabilities.affine, self.uncertainty_img_path)
         return uncertainty
 
 
@@ -230,6 +236,18 @@ class SegmentedSubject(Subject):
         for label, image_path in self.confusion_paths_map.items():
             nifti.save(images[label], affine, image_path,
                        settings={'set_intent': 'vector'})
+
+
+    def make_segmentation_collage(self):
+        t1 = nifti.get_thumbnail(self.t1_path)
+        csf = nifti.get_thumbnail(self.confusion_csf_path)
+        gm = nifti.get_thumbnail(self.confusion_gm_path)
+        wm = nifti.get_thumbnail(self.confusion_wm_path)
+        std = nifti.get_thumbnail(self.uncertainty_img_path)
+        thumbnails = [t1, csf, gm, wm, std]
+        collage = np.hstack(thumbnails)
+        image = Image.fromarray(collage)
+        image.save(self.segmentation_collage_path)
 
 
 
