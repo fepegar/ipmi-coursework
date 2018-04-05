@@ -34,11 +34,13 @@ def get_thumbnail(image):
         return data
 
     if not isinstance(image, nib.Nifti1Image):
-        image = load(image)
-        data = image.get_data()
-    if isinstance(image, np.ndarray):
-        data = image
+        if isinstance(image, np.ndarray):
+            data = image
+        else:  # assume PathLike
+            image = load(image)
+            data = image.get_data()
 
+    # Extract slices from 3D array
     sagittal_slice = data[100, :, :]
     sagittal_slice = np.fliplr(sagittal_slice).squeeze()
 
@@ -49,36 +51,33 @@ def get_thumbnail(image):
     coronal_slice = np.rot90(coronal_slice, -1)
     coronal_slice = np.fliplr(coronal_slice).squeeze()
 
-    if sagittal_slice.ndim > 2:
-        sagittal_slice = sagittal_slice.squeeze()
+    # Grey to RGB
+    if sagittal_slice.ndim == 2:
+        sagittal_slice = np.stack(3 * [sagittal_slice], axis=2)
+    if axial_slice.ndim == 2:
+        axial_slice = np.stack(3 * [axial_slice], axis=2)
+    if coronal_slice.ndim == 2:
+        coronal_slice = np.stack(3 * [coronal_slice], axis=2)
 
+    # Pad if odd and match width of sagittal slice
     if sagittal_slice.shape[1] % 2 == 1:
-        width = [(0, 0), (0, 1)]
-        if sagittal_slice.ndim > 2:
-            width.append((0, 0))
+        width = [(0, 0), (0, 1), (0, 0)]
         sagittal_slice = np.pad(sagittal_slice, width, 'constant')
 
     if axial_slice.shape[1] % 2 == 1:
-        width = [(0, 0), (0, 1)]
-        if axial_slice.ndim > 2:
-            width.append((0, 0))
+        width = [(0, 0), (0, 1), (0, 0)]
         axial_slice = np.pad(axial_slice, width, 'constant')
     diff = sagittal_slice.shape[1] - axial_slice.shape[1]
-    width = [(0, 0), (diff//2, diff//2)]
-    if axial_slice.ndim > 2:
-        width.append((0, 0))
+    width = [(0, 0), (diff//2, diff//2), (0, 0)]
     axial_slice = np.pad(axial_slice, width, 'constant')
 
     if coronal_slice.shape[1] % 2 == 1:
-        width = [(0, 0), (0, 1)]
-        if coronal_slice.ndim > 2:
-            width.append((0, 0))
+        width = [(0, 0), (0, 1), (0, 0)]
         coronal_slice = np.pad(coronal_slice, width, 'constant')
     diff = sagittal_slice.shape[1] - coronal_slice.shape[1]
-    width = [(0, 0), (diff//2, diff//2)]
-    if coronal_slice.ndim > 2:
-        width.append((0, 0))
+    width = [(0, 0), (diff//2, diff//2), (0, 0)]
     coronal_slice = np.pad(coronal_slice, width, 'constant')
 
     thumbnail = np.vstack([axial_slice, sagittal_slice, coronal_slice])
+
     return normalise_int(thumbnail)
