@@ -89,7 +89,8 @@ class Subject:
         self.segmentation_costs_path = self.segmentation_dir / 'costs.npy'
         self.segmentation_costs_plot_path = self.segmentation_dir / 'costs.png'
         self.segmentation_collage_path = self.segmentation_dir / 'collage.png'
-        self.uncertainty_img_path = self.segmentation_dir / 'uncertainty.nii.gz'
+        self.uncertainty_img_path = self.segmentation_dir / (
+            self.id + '_uncertainty' + NII_EXT)
 
 
     def __repr__(self):
@@ -175,6 +176,7 @@ class Subject:
     def make_uncertainty_image(self):
         probabilities = nifti.load(self.probabilities_path)
         uncertainty = 1 - probabilities.get_data().std(axis=3)
+        uncertainty[uncertainty == 1] = uncertainty.min()
         nifti.save(uncertainty, probabilities.affine, self.uncertainty_img_path)
         return uncertainty
 
