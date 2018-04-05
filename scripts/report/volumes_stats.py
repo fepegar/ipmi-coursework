@@ -14,19 +14,8 @@ sns.set()
 sns.set_context('paper')
 
 def plot(fig, index, x, y, title, norm=False):
-    # if index == 1:
-    #     ax = fig.add_subplot(2, 3, index)
-    # elif index <= 3:
-    #     ax = fig.add_subplot(2, 3, index, sharey=fig.axes[0])
-    # elif index == 4:
-    #     ax = fig.add_subplot(2, 3, index, sharex=fig.axes[0])
-    # else:
-    #     print(fig.axes)
-    #     ax = fig.add_subplot(2, 3, index,
-    #                          sharey=fig.axes[3], sharex=fig.axes[index - 3])
     ax = fig.add_subplot(2, 3, index)
     cc, p = pearsonr(x, y)
-    # title = f'{title} (R = {cc:.2f}, p = {p:.3f})'
     title = title + ' (' + r'$R$' + f' = {cc:.2f}, ' + r'$p$' + f' = {p:.3f})'
     ax.set_title(title)
     if index > 3:
@@ -47,7 +36,11 @@ figure_path = repo_dir / 'latex' / 'figures' / 'volumes_stats.png'
 
 
 subjects = ipmi.get_unsegmented_subjects()
+subjects = [s for s in subjects if s.segmentation_em_path.exists()]
+
 ages = array([subject.age for subject in subjects])
+
+print('Computing volumes...')
 volumes_tuples = [subject.get_volumes_normalised() for subject in subjects]
 
 gms = array([t.volumes[GREY_MATTER] for t in volumes_tuples])
@@ -57,6 +50,7 @@ gms_norm = array([t.normalised_volumes[GREY_MATTER] for t in volumes_tuples])
 wms_norm = array([t.normalised_volumes[WHITE_MATTER] for t in volumes_tuples])
 brains_norm = array([t.normalised_volumes[BRAIN] for t in volumes_tuples])
 
+print('Saving figure...')
 fig = plt.figure()
 fig.set_size_inches(8, 4)
 
