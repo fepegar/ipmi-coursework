@@ -1,6 +1,7 @@
 import re
 import shutil
 from copy import copy
+from os.path import relpath
 from collections import namedtuple
 
 from . import path
@@ -21,6 +22,7 @@ SEGMENTATION = '_segmentation'
 MANUAL = '_manual'
 PRIORS = '_priors'
 CONFUSION = '_confusion'
+
 
 
 class Subject:
@@ -92,7 +94,7 @@ class Subject:
     def import_t1(self, t1_path):
         if not self.t1_path.is_file():
             path.ensure_dir(self.t1_path)
-            self.t1_path.symlink_to(t1_path)
+            self.t1_path.symlink_to(relpath(t1_path, start=self.t1_path.parent))
 
 
     def get_affine_to_template_path(self, template):
@@ -190,7 +192,9 @@ class SegmentedSubject(Subject):
         if segmentation_manual_path is not None:
             if not self.segmentation_manual_path.is_file():
                 path.ensure_dir(self.segmentation_manual_path)
-                self.segmentation_manual_path.symlink_to(segmentation_manual_path)
+                self.segmentation_manual_path.symlink_to(
+                    relpath(segmentation_manual_path,
+                            start=self.segmentation_manual_path.parent))
 
 
     def __repr__(self):

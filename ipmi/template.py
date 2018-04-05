@@ -1,3 +1,6 @@
+import shutil
+from os.path import relpath
+
 import numpy as np
 from PIL import Image
 
@@ -47,20 +50,25 @@ class Template:
 
 
     def make_default(self):
-        # TODO: make relative symlinks
         template_final = Template(const.FINAL_TEMPLATE)
         if template_final.dir.is_dir():
-            import shutil
             shutil.rmtree(str(template_final.dir))
         path.ensure_dir(template_final.template_image_path)
 
-        template_final.template_image_path.symlink_to(self.template_image_path)
+        start = template_final.dir
+
+        template_final.template_image_path.symlink_to(
+            relpath(self.template_image_path, start=start))
         template_final.priors_background_path.symlink_to(
-            self.priors_background_path)
-        template_final.priors_csf_path.symlink_to(self.priors_csf_path)
-        template_final.priors_gm_path.symlink_to(self.priors_gm_path)
-        template_final.priors_wm_path.symlink_to(self.priors_wm_path)
-        template_final.collage_path.symlink_to(self.collage_path)
+            relpath(self.priors_background_path, start=start))
+        template_final.priors_csf_path.symlink_to(
+            relpath(self.priors_csf_path, start=start))
+        template_final.priors_gm_path.symlink_to(
+            relpath(self.priors_gm_path, start=start))
+        template_final.priors_wm_path.symlink_to(
+            relpath(self.priors_wm_path, start=start))
+        template_final.collage_path.symlink_to(
+            relpath(self.collage_path, start=start))
 
 
     def generate(self, images_paths, labels_paths):
