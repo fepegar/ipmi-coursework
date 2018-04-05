@@ -6,7 +6,7 @@
 Tissue Probability Maps (TPMs) of cerebrospinal fluid (CSF), gray matter (GM), white matter (WM) and background must be generated so that they can be used as spatial priors for tissue segmentation. For that, the group of subjects with an associated label map representing a previous tissue segmentation has been used.
 
 
-The TPMs are calculated as an average of all the label maps that have been projected to a common space defined by a \textit{template} image. An example of such a template is the one built at the Montreal Neurological Institute (MNI) \cite{evans_3d_1993}. However, for this project a template space has been built iteratively using a groupwise coregistration of all the subjects in the group. All the registrations have been performed using NiftyReg \cite{modat_global_2014}\footnote{The repository containing the Python code used for the experiments (over 2000 lines) and the \LaTeX\ code used to create this report is available online at \href{https://github.com/fepegar/ipmi-coursework}{https://github.com/fepegar/ipmi-coursework}. It was made public at the deadline.}.
+The TPMs are calculated as an average of all the label maps that have been projected to a common space defined by a \textit{template} image. An example of such a template is the one built at the Montreal Neurological Institute (MNI) \cite{evans_3d_1993}. However, for this project a template space has been built iteratively using a groupwise coregistration of all the subjects in the group. All the registrations have been performed using NiftyReg \cite{modat_global_2014}\footnote{The repository containing the Python code used for the experiments (over 2000 lines) and the \LaTeX\ code used to create this report is available online on GitHub, under request to the author.}.
 
 
 \subsection{Interpolation}
@@ -22,7 +22,7 @@ Linear interpolation has been used to resample a transformed TPM. This ensures t
 
 
 \subsection{Similarity measure}
-The linear version of NiftyReg, \textt{reg_aladin}, uses normalised cross-correlation (NCC) as the similarity measure. This appropriate for the registrations performed in this project, since all the registration are monomodal, i.e. a pairwise linear relationship between image intensities is expeted. If registration was multimodal, e.g. MRI and CT, a different similarity measure as normalised mutual information or joint entropy would be more appropriate.
+The linear version of NiftyReg (Aladin block-matching algorithm), uses normalised cross-correlation (NCC) as similarity measure. This is appropriate for the registrations performed in this project, since they are all monomodal, i.e. a pairwise linear relationship between image intensities is expected. If registrations were multimodal, e.g. MRI to CT, a different similarity measure as normalised mutual information or joint entropy would be more appropriate.
 
 
 
