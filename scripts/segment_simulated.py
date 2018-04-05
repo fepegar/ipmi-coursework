@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from ipmi import template
 from ipmi import UnsegmentedSubject
+from ipmi import template, constants
 from ipmi import registration as reg
 
-t1_path = Path('/Users/fernando/Desktop/MPHYGB06_coursework_2018/img_99_age_99.nii.gz')
+t1_path = constants.ROOT_DIR / 'img_99_age_99.nii.gz'
 
 flo_path = template.get_final_template().template_image_path
 
