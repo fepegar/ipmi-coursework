@@ -25,50 +25,78 @@ When the EM loop is finished, each voxel is assigned to the class with the highe
   \label{fig:em-first}
 \end{figure}
 
-The uncertainty of the algorithm assigning a voxel $i$ to a class can be measured as $u_i = 1 - \sigma_i$. Figure \ref{fig:experiment-a} shows another representation of the segmentation of this experiment (named A), including the uncertainty image. The most certain zones are the background and the inner parts of the WM, while the most uncertain ones are the interfaces between different tissues.
+The uncertainty of the algorithm assigning a voxel $i$ to a class can be measured as $u_i = 1 - \sigma_i$. Figure \ref{fig:experiment-a} shows another representation of the segmentation of this experiment (named A), including the uncertainty image. The most certain zones are the background and the inner parts of the WM, while the most uncertain ones are the interfaces between different tissues. There is however a high uncertainty in most parts of the head.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/experiment_a}
+  \caption{Results of experiment A: EM segmentation. From left to right: $T_1$-weighted image; CSF, GM and WM segmentations; uncertainty. In the segmentations, white voxels are TP, black voxels are TN, green voxels are FN and magenta voxels are FP.}
+  \label{fig:experiment-a}
+\end{figure}
+
+Some observations from the segmentation images can be made:
+\begin{itemize}
+  \item Dark parts outside the brain like the eyes have been incorrectly classified as CSF. Also, all the heads seem to have been segmented by Otsu-thresholding, closing, dilation and masking. This creates a noisy zone around the head which corresponds to the original image background. The masked out part of the images is totally black, therefore those voxels are all assigned to the background class in this experiment (the background class always has $\mu = 0$ and $\sigma^2 = 0$)
+  \item GM structures with high intensity like the lateral part of the thalamus or the posterior part of the putamen have been incorrectly classified as WM. Again, a lot of tissue outside the brain has been assigned to these classes, given that no spatial a priori information has been provided.
+\end{itemize}
+
+
+
+% Use image registration to propagate the previously generated tissue probability maps into the space of the non-segmented brain MRIs. This can be achieved by registering the groupwise mean template to the non- segmented brain and then applying the obtained transformation to the probability maps.
+% Use then the propagated probability maps as a priori information in your GMM [10]. If you did not complete the previous section, you may use the provided prior files.
+
+\subsection{Initialisation using tissue priors}
+The previously generated TPMs can be used as spatial priors within the bayesian framework implemented in the GMM. First, they must be propagated to the subject's space. For that, the template image is non-linearly registered to the subject's $T_1$-weighted MRI and the resulting transform is applied to the TPMs. Using this spatial a priori leads to better qualitative and quantitative results, as shown in Figure~\ref{fig:experiment-b}, which shows the results of experiment B. Also, the algorithm runs faster thans to an initialisation of the Gaussians parameters using the priors. Furthermore, the label maps are consistently sorted, in contrast to experiment A, where the parameters are randomly computed.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/experiment_b}
+  \caption{Results of experiment B: EM segmentation using spatial priors. From left to right: $T_1$-weighted image; CSF, GM and WM segmentations; uncertainty. In the segmentations, white voxels are TP, black voxels are TN, green voxels are FN and magenta voxels are FP.}
+  \label{fig:experiment-b}
+\end{figure}
+
+Figure \ref{fig:experiment-b} shows that results using the TPMs as spatial priors are qualitatively better:
+\begin{itemize}
+  \item All the tissue that is far from the brain has been correctly classified as background
+  \item Some false negatives in the CSF seem to have been misclassified in the provided segmentation used as ground truth, as shown in Figure~\ref{manual-wrong}. Most of the false negatives are in dark tissue near the ground-truth CSF
+  \item Most of the wrong values of GM and WM are in the interfaces between both tissues, but some of the voxels are isolated
+  \item The uncertainty is higher around the CSF and on the interfaces between different tissues, which is coherent to the segmentation results.
+\end{itemize}
 
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.7\textwidth]{figures/experiment_a}
-  \caption{Results of experiment A.}
-  \label{fig:experiment-a}
+  \includegraphics[width=\textwidth]{figures/priors_manual_wrong}
+  \caption{Detail of the ground truth segmentation. Tissue around the eye has been incorrectly classified as CSF.}
+  \label{fig:manual-wrong}
 \end{figure}
 
 
 
 
-% Use image registration to propagate the previously generated tissue probability maps into the space of the non-segmented brain MRIs. This can be achieved by registering the groupwise mean template to the non- segmented brain and then applying the obtained transformation to the probability maps.
+\subsubsection{TPMs propagation}
 
-\subsection{Initialisation using tissue priors}
-In order to use the previously generated TPMs as priors for the GMM, they must be propagated to the subject's space. For that, the template image is non-linearly registered to the subject's $T_1$-weighted MRI and the resulting transform is applied to the TPMs.
-
+TODO
 % TODO: explain choice of reg_f3d bending energy
 % Since the TPMs and the template have been built with linear registrations only, the same logic must be applied while propagating them. This means that the free-form registration must be flexible enough to adapt to the subject's anatomy while producing a smooth resampled TPM that ensures a certain generalisability.
 
 % TODO: show displacement field and jacobian
 
-% Use then the propagated probability maps as a priori information in your GMM [10]. If you did not complete the previous section, you may use the provided prior files.
-
-Once the TPMs are projected into the subject's space, they can be used as priors within the bayesian framework implemented in the EM algorithm. Adding this spatial a priori leads to better qualitative and cuantitative results, as shown in Figure \ref{fig:em-priors}.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=0.7\textwidth]{figures/em_priors}
-  \caption{Results of an automatic EM segmentation using TPMs as priors. The different classes are: blue - CSF; green - GM; green - WM. The Dice scores compared to the provided segmentation are: 0.80 for CSF, 0.90 for GM and 0.92 for GM.}
-  \label{fig:em-priors}
-\end{figure}
-
-% TODO: show segmentation with priors. And uncertainty?
 
 
 \subsection{Regularisation with Markov random fields}
 
 % Embed a Markov random field into your segmentation framework to introduce a spatial smoothness term in the label estimation process [10].
 
-Noise or bright voxels outside the brain can make the intensity of a voxel different to its neighbors intensities, which may lead to isolated voxels if the a priori probabilities for different classes are similar. Embedding a Markov random field (MRF) into the segmentation helps smoothing the labels, potentially improving the anatomical plausibility of the segmentation. More specifically, a sixth-order Gibbs Random Field has been implemented. The probabilities array is multiplied by $e^{- \beta U_{MRF}(.)}$, where $U_{MRF}$ is the energy function of the MRF and $\beta$ is a weighting parameter used to control the effect of the MRF on the segmentation. Figure \ref{fig:em-mrf} shows the results of a segmentations that include MRF smoothing, for different values of $\beta$. The results show that the labels smoothing increases with $\beta$.
+A voxel with different intensity than all its closest neighbors may be incorrectly classified if its priors for multiple classes are close. This leads to isolated voxels, e.g. voxels of GM in the middle of the WM. Embedding a Markov random field (MRF) into the segmentation helps smoothing the labels, potentially improving the anatomical plausibility of the segmentation. More specifically, a sixth-order Gibbs Random Field has been implemented \cite{leemput_automated_1999-1}. The probabilities array is multiplied by $e^{- \beta U_{MRF}(.)}$, where $U_{MRF}$ is the energy function of the MRF and $\beta$ is a weighting parameter used to control the effect of the MRF on the segmentation. Figure \ref{fig:experiment-c} shows the results of a segmentations that include MRF smoothing for $\beta = 0.2$. Qualitatively, it can be seen that some of the voxels inside the brain that had been classified as CSF without regularisation are now corractly classified. Using a higher value of $\beta$ helps removing isolated voxels, but it comes with a cost of misclassifying many voxels around the sulci, as will be shown later.
 
-% TODO: show segmentations with MRF. Explain better using literature
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/experiment_b}
+  \caption{Results of experiment C: EM segmentation using spatial priors and MRF regularisation. From left to right: $T_1$-weighted image; CSF, GM and WM segmentations; uncertainty. In the segmentations, white voxels are TP, black voxels are TN, green voxels are FN and magenta voxels are FP.}
+  \label{fig:experiment-c}
+\end{figure}
+
 
 
 \subsection{Bias field correction}
@@ -77,24 +105,49 @@ Noise or bright voxels outside the brain can make the intensity of a voxel diffe
 
 Since MRI acquisition usually suffers from intensity non-uniformity (INU) due to inhomogeneities in the static magnetic field of the MR scanner, a bias field correction component has been also embedded into the segmentation framework. The bias field is modelled using three-dimensional polynomials whose coefficients are computed using a weighted least-squares fit, as in \cite{leemput_automated_1999}. The implemented algorithm can use polynomial orders from 0 to 3.
 
-The computed bias field can saved, as shown in Figure \ref{fig:bias-field}. Most of the exctracted bias fields from the images look similar: bright in the head and darker outside it. This might be due to two reasons:
+The computed bias field can be saved after the segmentation process, as shown in Figure \ref{fig:bias-field}. The extracted bias fields from most images look similar: bright in the head and darker outside it. This might be due to two reasons:
 \begin{enumerate}
   \item The images used for this project have already been preprocessed to remove some of the intrinsic bias field artefact
   \item The algorithm tries to remove bias from the voxels classified as background, which is not useful in this case. A possible extension of the classification algorithm would be using only the foreground voxels for the bias field correction step.
 \end{enumerate}
-Therefore, small changes in the quality of the segmentation are expected when using the INU correction step.
+Therefore, very small changes in the quality of the segmentation are expected when using the INU correction step. Figure~\ref{fig:experiment-d} shows the result of Experiment D, using polynomials of order $n = 2$.
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figures/bias_field}
   \caption{Estimated bias field superimposed on the $T_1$-weighted image. Higher intensity represents larger bias.}
-  \label{fig:params-optimisation}
+  \label{fig:bias-field}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/experiment_b}
+  \caption{Results of experiment D: EM segmentation using spatial priors, MRF regularisation and INU correction. From left to right: $T_1$-weighted image; CSF, GM and WM segmentations; uncertainty. In the segmentations, white voxels are TP, black voxels are TN, green voxels are FN and magenta voxels are FP.}
+  \label{fig:experiment-d}
 \end{figure}
 
 
-\subsection{Similarity measure}
+\subsection{Stronger regularisation}
+Experiment E consisted on segmenting using $\beta = 2$, which produces a smoother segmentation. Figure~\ref{fig:experiment-e} shows the results.
 
-% TODO: explain Dice, weighted?
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/experiment_b}
+  \caption{Results of experiment E: EM segmentation using spatial priors, strong MRF regularisation and INU correction. From left to right: $T_1$-weighted image; CSF, GM and WM segmentations; uncertainty. In the segmentations, white voxels are TP, black voxels are TN, green voxels are FN and magenta voxels are FP.}
+  \label{fig:experiment-e}
+\end{figure}
+
+
+
+\subsection{Quantitative comparison}
+The automatic segmentations and the ground truth can be compared quantitatively using a similarity metric like the Dice score. Figure~\ref{fig:experiments} shows that embedding the anatomical priors into the segmentation framework (B) improves the results dramatically compared to the initial algorithm results (A); a small regularisation has almost no effect on the score (C); the INU correction improves it slightly (D); and using too much regularisation leads to less accurate results (E).
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/experiments_dices_bars}
+  \caption{Dice scores for the five experiments run on the first subject. A: initial algorithm; B: priors added; C: MRF regularisation added; D: INU correction added; E: effect of a regularisation using a value $\beta$ that is too high.}
+  \label{fig:experiments}
+\end{figure}
 
 
 
