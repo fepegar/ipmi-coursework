@@ -144,7 +144,7 @@ class SegmentationPipeline:
 
 
 def main():
-    force = True
+    force = False
     pipeline = SegmentationPipeline()
     pipeline.register_template_to_subjects(force=force)
     pipeline.propagate_priors(non_linear=True, force=force)
