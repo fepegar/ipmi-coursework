@@ -20,16 +20,23 @@ When the EM loop is finished, each voxel is assigned to the class with the highe
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.7\textwidth]{figures/em_first}
-  \caption{Results of an automatic EM segmentation. Approximate classes are: blue - CSF; green - GM; green - WM. The Dice scores compared to the provided segmentation are: 0.38 for CSF, 0.66 for GM and 0.73 for GM.}
+  \includegraphics[width=\textwidth]{figures/em_first}
+  \caption{Results of an automatic EM segmentation. Approximate classes are: blue - CSF; green - GM; green - WM.}
   \label{fig:em-first}
 \end{figure}
 
-The uncertainty of the algorithm assigning a voxel $i$ to a class can be measured as $u_i = 1 - \sigma_i$. Figure \ref{fig:em-first-uncertainty} shows the uncertainty for the segmentation of Figure \ref{fig:em-first}. The most certain zones are the background and the inner parts of the WM, while the most uncertain ones are the interfaces between different tissues.
-% TODO: show uncertainty image
+The uncertainty of the algorithm assigning a voxel $i$ to a class can be measured as $u_i = 1 - \sigma_i$. Figure \ref{fig:experiment-a} shows another representation of the segmentation of this experiment (named A), including the uncertainty image. The most certain zones are the background and the inner parts of the WM, while the most uncertain ones are the interfaces between different tissues.
 
 
-% TODO: plot gaussians and histogram?
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{figures/experiment_a}
+  \caption{Results of experiment A.}
+  \label{fig:experiment-a}
+\end{figure}
+
+
+
 
 % Use image registration to propagate the previously generated tissue probability maps into the space of the non-segmented brain MRIs. This can be achieved by registering the groupwise mean template to the non- segmented brain and then applying the obtained transformation to the probability maps.
 
@@ -68,9 +75,28 @@ Noise or bright voxels outside the brain can make the intensity of a voxel diffe
 
 % MRI acquisition usually suffers from intensity non-uniformity (INU), improve the robustness of your GMM framework to INU by adding a bias field correction component to the probabilistic model [5].
 
-Since MRI acquisition usually suffers from intensity non-uniformity (INU) due to inhomogeneities in the static magnetic field of the MR scanner, a bias field correction component has been also embedded into the segmentation framework. The bias field is modelled using three-dimensional polynomials whose coefficients are computed using a weighted least-sqaures fit, as in \cite{leemput_automated_1999}.
+Since MRI acquisition usually suffers from intensity non-uniformity (INU) due to inhomogeneities in the static magnetic field of the MR scanner, a bias field correction component has been also embedded into the segmentation framework. The bias field is modelled using three-dimensional polynomials whose coefficients are computed using a weighted least-squares fit, as in \cite{leemput_automated_1999}. The implemented algorithm can use polynomial orders from 0 to 3.
 
-% TODO: show INU results. Explain polynomial order, etc
+The computed bias field can saved, as shown in Figure \ref{fig:bias-field}. Most of the exctracted bias fields from the images look similar: bright in the head and darker outside it. This might be due to two reasons:
+\begin{enumerate}
+  \item The images used for this project have already been preprocessed to remove some of the intrinsic bias field artefact
+  \item The algorithm tries to remove bias from the voxels classified as background, which is not useful in this case. A possible extension of the classification algorithm would be using only the foreground voxels for the bias field correction step.
+\end{enumerate}
+Therefore, small changes in the quality of the segmentation are expected when using the INU correction step.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/bias_field}
+  \caption{Estimated bias field superimposed on the $T_1$-weighted image. Higher intensity represents larger bias.}
+  \label{fig:params-optimisation}
+\end{figure}
+
+
+\subsection{Similarity measure}
+
+% TODO: explain Dice, weighted?
+
+
 
 
 \subsection{Parameters optimisation}
@@ -79,10 +105,12 @@ Since MRI acquisition usually suffers from intensity non-uniformity (INU) due to
 
 A regular parameter grid has been generated in order to sample the parameter space looking for the best Dice scores, using the first segmented subject. The polinomial orders were 0, 1, 2 and 3 and 8 values of $\beta$ in a logarithmic space from 0.01 to 2 have been sampled. Figure \ref{fig:params-optimisation} shows the results of this parameters search. Interpolating the Dice scores using bicubic interpolation shows that a good choice for the polynomials order is 2 or 3, while $\beta$ should be lower than 1 for good scores. Following segmentation experiments have been performed with polynomial order $n = 2$ and MRF weight $\beta = 0.2$.
 
+
+
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figures/parameters_dices}
-  \caption{Contour plots representing Dice scores for the different parameters. The contours are isolines of the scores interpolated using bicubic interpolation. Green dots represented sampled points: blue dots are the highest sampled Dice score; orange dots are the highest interpolated Dice score.}
+  \caption{Contour plots representing Dice scores for the different parameters. The contours are isolines of the sampled scores interpolated using bicubic interpolation. Green dots represented sampled points; blue dots are the highest sampled Dice score; orange dots are the highest interpolated Dice score.}
   \label{fig:params-optimisation}
 \end{figure}
 
