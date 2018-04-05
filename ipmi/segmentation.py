@@ -5,7 +5,7 @@ import matplotlib as mpl
 from scipy.sparse import diags
 from scipy.ndimage import convolve, generate_binary_structure
 mpl.use('TkAgg')
-from matplotlib.pyplot import figure
+import matplotlib.pyplot as plt
 
 from . import nifti
 from .path import ensure_dir
@@ -417,7 +417,7 @@ class ExpectationMaximisation:
             np.save(str(costs_path), results.costs)
 
         if costs_plot_path is not None:
-            fig = figure()
+            fig = plt.figure()
             axis = fig.gca()
             axis.set_title('Cost vs iterations')
             axis.set_xlabel('Iterations')
@@ -427,6 +427,7 @@ class ExpectationMaximisation:
             axis.plot(results.costs, '-o')
             axis.set_xticks(range(0, len(results.costs) + 1, 2))
             fig.savefig(costs_plot_path, dpi=400)
+            plt.close(fig)
 
         if probabilities_path is not None:
             nifti.save(results.probabilities, self.image_nii.affine,
