@@ -40,6 +40,8 @@ def get_thumbnail(image):
             image = load(image)
             data = image.get_data()
 
+    data = normalise_int(data)
+
     # Extract slices from 3D array
     sagittal_slice = data[100, :, :]
     sagittal_slice = np.fliplr(sagittal_slice).squeeze()
@@ -80,4 +82,4 @@ def get_thumbnail(image):
 
     thumbnail = np.vstack([axial_slice, sagittal_slice, coronal_slice])
 
-    return normalise_int(thumbnail)
+    return thumbnail
