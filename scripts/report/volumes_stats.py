@@ -22,7 +22,10 @@ print('Subjects:', len(subjects))
 ages = array([subject.age for subject in subjects])
 
 print('Computing volumes...')
-volumes_tuples = [subject.get_volumes_normalised() for subject in subjects]
+volumes_tuples = []
+for subject in subjects:
+    print(subject)
+    volumes_tuples.append(subject.get_volumes_normalised())
 
 
 print('Saving figure...')
@@ -81,7 +84,12 @@ x, y = ages, wms/gms
 title = 'WM/GM'
 ax = fig.add_subplot(111)
 cc, p = pearsonr(x, y)
-title = title + ' (' + r'$\rho$' + f' = {cc:.2f}, ' + r'$p$' + f' = {p:.3f})'
+cc_str = ' (' + r'$\rho$' + f' = {cc:.2f}, '
+if p < 1e-3:
+    p_str = r'$p < 10^{-3}$)'
+else:
+    p_str = r'$p$' + f' = {p:.3f})'
+title = title + cc_str + p_str
 ax.set_title(title)
 ax.set_xlabel('Age (years)')
 norm = True
