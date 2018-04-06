@@ -3,7 +3,7 @@
 % Implement a Gaussian Mixture Model (GMM) to segment the 20 non-segmented MRI brains and optimise your model through an Expectation-Maximisation scheme [15].
 
 \subsection{Expectation-Maximisation}
-In order to perform the tissue classification, an Gaussian Mixture Model (GMM) using Expectation-Maximisation (EM) optimisation algorithm has been implemented following \cite{leemput_automated_1999-1}. The initial version that has been developed receives as input the $T_1$-weighted image and the number of classes. The means and variances of the gaussian functions representing each class are initialised randomly, and scaled using the image values:
+In order to perform the tissue classification, a Gaussian Mixture Model (GMM) with Expectation-Maximisation (EM) optimisation has been implemented following \cite{leemput_automated_1999-1}. The initial version that has been developed receives as input the $T_1$-weighted image and the number of classes $K$. The means and variances of the gaussian functions representing each class are initialised randomly, and scaled using the image values:
 
 \begin{equation}
   \mu_k = [\max(y) - \min(y)] R + \min(y)
@@ -12,11 +12,11 @@ and
 \begin{equation}
   \sigma^2_k = a R + b [\max(y) - \min(y)]
 \end{equation}
-where $\mu_k$ is the mean intensity of class $k$, $y$ is the T1 image, $R \sim \mathcal{U}\{0, 1\}$ and $a$ and $b$ are scaling parameters that have been set to 10 and 0.8, respectively.
+where $\mu_k$ is the mean intensity of class $k$, $y$ is the $T_1-weighted$ image, $R \sim \mathcal{U}\{0, 1\}$ and $a$ and $b$ are scaling parameters that have been set to 10 and 0.8, respectively.
 
-Once the gaussians parameters have been initialised, the EM loop is run until convergence or until a maximum number of iterations has been reached. The convergence happens when the ratio between the log-likelihood of the current and previous iterations is greater than $1 - \epsilon$, where the convergence threshold $\epsilon$ has been set to $10^{-5}$. The algorithm usually converges around 12 iterations, and the maximum number of iterations has been set to 30. All these parameters are customisable by the user when calling the EM method.
+Once the GMM parameters have been initialised, the EM loop is run until convergence or until a maximum number of iterations has been reached. Convergence happens when the ratio between the log-likelihood of the current iteration and the previous one is greater than $1 - \epsilon$, where the convergence threshold $\epsilon$ has been set to $10^{-5}$. The algorithm usually converges around 12 iterations, and the maximum number of iterations has been set to 30. All these parameters are customisable by the user when calling the EM method.
 
-When the EM loop is finished, each voxel is assigned to the class with the highest probability and a label map representing the automatic segmentation is saved. Figure \ref{fig:em-first} shows the results of a segmentation. Dice scores are computed comparing each label with the provided label maps, that are used as ground truth. Since no spatial information is used, the algorithm has assigned voxels outside the brain to be brain tissue, and some voxels are isolated within a different class, which is is not plausible anatomically. Adding TPMs as priors and using Markov random field (MRF) smoothing is necessary to produce a more realistic output.
+When the EM loop is finished, each voxel is assigned to the class with the highest probability and a label map representing the automatic segmentation is saved. Figure \ref{fig:em-first} shows the results of a segmentation. Dice scores are computed comparing each label with the provided label maps, that are used as ground truth. Since no spatial information is used, the algorithm has assigned voxels outside the brain to brain tissue classes, and some voxels are isolated within a different class, which is is not plausible anatomically. Adding TPMs as priors and using Markov random field (MRF) smoothing is necessary to produce a more realistic output.
 
 \begin{figure}
   \centering
@@ -36,8 +36,8 @@ The uncertainty of the algorithm assigning a voxel $i$ to a class can be measure
 
 Some observations from the segmentation images can be made:
 \begin{itemize}
-  \item Dark parts outside the brain like the eyes have been incorrectly classified as CSF. Also, all the heads seem to have been segmented by Otsu-thresholding, closing, dilation and masking. This creates a noisy zone around the head which corresponds to the original image background. The masked out part of the images is totally black, therefore those voxels are all assigned to the background class in this experiment (the background class always has $\mu = 0$ and $\sigma^2 = 0$)
-  \item GM structures with high intensity like the lateral part of the thalamus or the posterior part of the putamen have been incorrectly classified as WM. Again, a lot of tissue outside the brain has been assigned to these classes, given that no spatial a priori information has been provided.
+  \item Dark parts outside the brain like the eyes have been incorrectly classified as CSF. Also, the heads in all the provided images seem to have been segmented by 1) Otsu-thresholding, 2) morphological closing, 3) morphological dilation and 4) masking the image. This creates a noisy dark zone around the head which corresponds to the original image background (air). The masked out part of the images is totally black, therefore those voxels are all assigned to the background class in this experiment (the background class for experiment A has $\mu = 0$ and $\sigma^2 = 0$)
+  \item GM structures with high intensity like the lateral part of the thalamus or the posterior part of the putamen have been incorrectly classified as WM. Again, a large amount of tissue outside the brain has been assigned to these classes, given that no spatial a priori information was provided.
 \end{itemize}
 
 
@@ -45,8 +45,8 @@ Some observations from the segmentation images can be made:
 % Use image registration to propagate the previously generated tissue probability maps into the space of the non-segmented brain MRIs. This can be achieved by registering the groupwise mean template to the non- segmented brain and then applying the obtained transformation to the probability maps.
 % Use then the propagated probability maps as a priori information in your GMM [10]. If you did not complete the previous section, you may use the provided prior files.
 
-\subsection{Initialisation using tissue priors}
-The previously generated TPMs can be used as spatial priors within the bayesian framework implemented in the GMM. First, they must be propagated to the subject's space. For that, the template image is non-linearly registered to the subject's $T_1$-weighted MRI and the resulting transform is applied to the TPMs. Using this spatial a priori leads to better qualitative and quantitative results, as shown in Figure~\ref{fig:experiment-b}, which shows the results of experiment B. Also, the algorithm runs faster thans to an initialisation of the Gaussians parameters using the priors. Furthermore, the label maps are consistently sorted, in contrast to experiment A, where the parameters are randomly computed.
+\subsection{Using tissue priors}
+The previously generated TPMs can be used as a priori spatial information within the bayesian framework implemented in the GMM. First, they must be propagated to the subject space. For that, the template image is registered to the subject's $T_1$-weighted MR image using NiftyReg's free-form deformation, and the resulting transform is applied to the TPMs. Using these spatial priors leads to better qualitative and quantitative results, as shown in Figure~\ref{fig:experiment-b}, which shows the results of experiment B. Also, the algorithm runs faster thanks to an initialisation of the GMM parameters using the priors. Furthermore, the label maps are consistently sorted, in contrast to experiment A, where the parameters are randomly computed.
 
 \begin{figure}
   \centering
@@ -58,7 +58,7 @@ The previously generated TPMs can be used as spatial priors within the bayesian 
 Figure \ref{fig:experiment-b} shows that results using the TPMs as spatial priors are qualitatively better:
 \begin{itemize}
   \item All the tissue that is far from the brain has been correctly classified as background
-  \item Some false negatives in the CSF seem to have been misclassified in the provided segmentation used as ground truth, as shown in Figure~\ref{manual-wrong}. Most of the false negatives are in dark tissue near the ground-truth CSF
+  \item Some false negatives in the CSF seem to have been misclassified in the provided segmentation used as ground truth, as shown in Figure~\ref{fig:manual-wrong}. Most of the false negatives are in dark tissue near the ground-truth CSF
   \item Most of the wrong values of GM and WM are in the interfaces between both tissues, but some of the voxels are isolated
   \item The uncertainty is higher around the CSF and on the interfaces between different tissues, which is coherent to the segmentation results.
 \end{itemize}
@@ -67,7 +67,7 @@ Figure \ref{fig:experiment-b} shows that results using the TPMs as spatial prior
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figures/priors_manual_wrong}
-  \caption{Detail of the ground truth segmentation. Tissue around the eye has been incorrectly classified as CSF.}
+  \caption{Detail of the ground truth segmentation. Tissue around the eye has been incorrectly classified as CSF, wo it is represented as FN in the automatic segmentation of experiment B.}
   \label{fig:manual-wrong}
 \end{figure}
 
@@ -86,11 +86,11 @@ Figure \ref{fig:experiment-b} shows that results using the TPMs as spatial prior
 
 % Embed a Markov random field into your segmentation framework to introduce a spatial smoothness term in the label estimation process [10].
 
-A voxel with different intensity than all its closest neighbors may be incorrectly classified if its priors for multiple classes are close. This leads to isolated voxels, e.g. voxels of GM in the middle of the WM. Embedding a Markov random field (MRF) into the segmentation helps smoothing the labels, potentially improving the anatomical plausibility of the segmentation. More specifically, a sixth-order Gibbs Random Field has been implemented \cite{leemput_automated_1999-1}. The probabilities array is multiplied by $e^{- \beta U_{MRF}(.)}$, where $U_{MRF}$ is the energy function of the MRF and $\beta$ is a weighting parameter used to control the effect of the MRF on the segmentation. Figure \ref{fig:experiment-c} shows the results of a segmentations that include MRF smoothing for $\beta = 0.2$. Qualitatively, it can be seen that some of the voxels inside the brain that had been classified as CSF without regularisation are now corractly classified. Using a higher value of $\beta$ helps removing isolated voxels, but it comes with a cost of misclassifying many voxels around the sulci, as will be shown later.
+A voxel with different intensity than all its closest neighbours may be incorrectly classified if its priors for multiple classes are similar. This leads to isolated voxels, e.g. voxels of GM in the middle of the WM. Embedding an MRF into the segmentation helps smoothing the labels, potentially improving the anatomical plausibility of the segmentation. More specifically, a sixth-order Gibbs Random Field has been implemented \cite{leemput_automated_1999-1}. The probabilities array is multiplied by $e^{- \beta U_{MRF}(.)}$ at each iteration, where $U_{MRF}$ is the energy function of the MRF and $\beta$ is a weighting parameter used to control the effect of the MRF on the segmentation. Figure \ref{fig:experiment-c} shows the results of a segmentations that include MRF smoothing for $\beta = 0.2$. Qualitatively, it can be seen that some of the voxels inside the brain that had been classified as CSF without regularisation are now correctly classified. Using a higher value of $\beta$ helps removing isolated voxels, but it comes with a cost of misclassifying many voxels around the sulci, as will be shown later.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figures/experiment_b}
+  \includegraphics[width=\textwidth]{figures/experiment_c}
   \caption{Results of experiment C: EM segmentation using spatial priors and MRF regularisation. From left to right: $T_1$-weighted image; CSF, GM and WM segmentations; uncertainty. In the segmentations, white voxels are TP, black voxels are TN, green voxels are FN and magenta voxels are FP.}
   \label{fig:experiment-c}
 \end{figure}
@@ -101,14 +101,14 @@ A voxel with different intensity than all its closest neighbors may be incorrect
 
 % MRI acquisition usually suffers from intensity non-uniformity (INU), improve the robustness of your GMM framework to INU by adding a bias field correction component to the probabilistic model [5].
 
-Since MRI acquisition usually suffers from intensity non-uniformity (INU) due to inhomogeneities in the static magnetic field of the MR scanner, a bias field correction component has been also embedded into the segmentation framework. The bias field is modelled using three-dimensional polynomials whose coefficients are computed using a weighted least-squares fit, as in \cite{leemput_automated_1999}. The implemented algorithm can use polynomial orders from 0 to 3.
+Since MRI acquisition usually suffers from intensity non-uniformity (INU) due to inhomogeneities in the static magnetic field of the MR scanner, a bias field correction component has been also embedded into the segmentation framework. The bias field is modelled using three-dimensional polynomials whose coefficients are iteratively optimised using a weighted least-squares fit, as in \cite{leemput_automated_1999}. The implemented algorithm can use polynomial orders from 0 to 3.
 
 The computed bias field can be saved after the segmentation process, as shown in Figure \ref{fig:bias-field}. The extracted bias fields from most images look similar: bright in the head and darker outside it. This might be due to two reasons:
 \begin{enumerate}
   \item The images used for this project have already been preprocessed to remove some of the intrinsic bias field artefact
   \item The algorithm tries to remove bias from the voxels classified as background, which is not useful in this case. A possible extension of the classification algorithm would be using only the foreground voxels for the bias field correction step.
 \end{enumerate}
-Therefore, very small changes in the quality of the segmentation are expected when using the INU correction step. Figure~\ref{fig:experiment-d} shows the result of Experiment D, using polynomials of order $n = 2$.
+For theses reasons, very small changes in the quality of the segmentation are expected when using the INU correction step. Figure~\ref{fig:experiment-d} shows the result of Experiment D, using polynomials of order $n = 2$.
 
 \begin{figure}
   \centering
@@ -119,18 +119,18 @@ Therefore, very small changes in the quality of the segmentation are expected wh
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figures/experiment_b}
+  \includegraphics[width=\textwidth]{figures/experiment_d}
   \caption{Results of experiment D: EM segmentation using spatial priors, MRF regularisation and INU correction. From left to right: $T_1$-weighted image; CSF, GM and WM segmentations; uncertainty. In the segmentations, white voxels are TP, black voxels are TN, green voxels are FN and magenta voxels are FP.}
   \label{fig:experiment-d}
 \end{figure}
 
 
 \subsection{Stronger regularisation}
-Experiment E consisted on segmenting using $\beta = 2$, which produces a smoother segmentation. Figure~\ref{fig:experiment-e} shows the results.
+Experiment E consisted on segmenting using $\beta = 2$, which produces a smoother segmentation. Most isolated voxels are removed, but CSF in the sulci has been classified as GM, as well as WM tissue close to the cortex. Figure~\ref{fig:experiment-e} shows the results.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figures/experiment_b}
+  \includegraphics[width=\textwidth]{figures/experiment_e}
   \caption{Results of experiment E: EM segmentation using spatial priors, strong MRF regularisation and INU correction. From left to right: $T_1$-weighted image; CSF, GM and WM segmentations; uncertainty. In the segmentations, white voxels are TP, black voxels are TN, green voxels are FN and magenta voxels are FP.}
   \label{fig:experiment-e}
 \end{figure}
@@ -143,7 +143,7 @@ The automatic segmentations and the ground truth can be compared quantitatively 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figures/experiments_dices_bars}
-  \caption{Dice scores for the five experiments run on the first subject. A: initial algorithm; B: priors added; C: MRF regularisation added; D: INU correction added; E: effect of a regularisation using a value $\beta$ that is too high.}
+  \caption{Dice scores for the five experiments run on the first subject. A: initial algorithm; B: priors added; C: MRF regularisation added; D: INU correction added; E: effect of a strong regularisation that uses a value $\beta$ that is too high.}
   \label{fig:experiments}
 \end{figure}
 
@@ -161,18 +161,18 @@ A regular parameter grid has been generated in order to sample the parameter spa
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figures/parameters_dices}
-  \caption{Contour plots representing Dice scores for the different parameters. The contours are isolines of the sampled scores interpolated using bicubic interpolation. Green dots represented sampled points; blue dots are the highest sampled Dice score; orange dots are the highest interpolated Dice score.}
+  \caption{Contour plots representing Dice scores for different values of the MRF regularisation term $\beta$ and bias field polynomial order $n$. The contours are isolines of the sampled scores interpolated using bicubic interpolation. Green dots represented sampled points; blue dots represent the highest sampled Dice scores; orange dots represent the highest interpolated Dice scores.}
   \label{fig:params-optimisation}
 \end{figure}
 
 
 % By choosing these parameters, bias can be introduced in the optimisation. Describe one potential bias and propose a solution to avoid it [5]?
 
-Optimising the segmentation parameters using only data from one subject leads to an overfit towards this subject, as shown in Figure \ref{fig:dices-bars}. If all the subjects were used for the parameters optimisation, the mean Dice score for the whole group would probably be higher.
+Optimising the segmentation parameters using only data from one subject leads to an overfit towards this subject, as shown in Figure \ref{fig:dices-bars}. If all the subjects had been used for the parameters optimisation, the mean Dice score for the whole group would probably be higher. Also, more advanced optimisation algorithms might be more powerful, although more time-consuming as well.
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{figures/dices_bars}
-  \caption{Dice scores for all segmented subjects. The selected parameters seem to work best for subject 0, the one used for the optimisation. These parameters work well with subject 5 as well. Optimising the parameters using all subjects would probably lead to better results.}
+  \caption{Dice scores for all segmented subjects. The selected parameters work best for subject 0, the one used for the optimisation. These parameters work well with subject 5 also. Optimising the parameters using all subjects would probably lead to better results.}
   \label{fig:dices-bars}
 \end{figure}
