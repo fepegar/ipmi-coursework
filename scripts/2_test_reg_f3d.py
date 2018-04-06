@@ -1,9 +1,12 @@
 import os
+from pathlib import Path
 from subprocess import call
 
 import numpy as np
 import nibabel as nib
 
+import ipmi
+from ipmi import template
 from ipmi import registration as reg
 
 os.chdir('/tmp/ff')
@@ -22,7 +25,7 @@ def make_label_map(input_path, central_value, output_path):
     nii = nib.load(input_path)
     data = nii.get_data()
     where_nan = np.isnan(data)
-    data[where_nan] = 0  # remove NaNs
+    np.nan_to_num(data, copy=False)
 
     if central_value - data.min() > data.max() - central_value:
         m = (128 - 0) / (central_value - data.min())
@@ -41,15 +44,25 @@ def make_label_map(input_path, central_value, output_path):
 
 
 def main():
-    for be in np.logspace(-3, -1, 10):
+    subject = ipmi.get_unsegmented_subjects()[0]
+    ref_path = subject.t1_path
+    flo_path = Path('template_on_00_affine.nii.gz')
+    if not flo_path.is_file():
+        template_path = template.get_final_template().template_image_path
+        trsf_path = subject.template_to_t1_affine_path
+        reg.resample(template_path, ref_path, trsf_path, flo_path)
+
+    bending_energies = np.logspace(-3, -1, 10)
+
+    for be in bending_energies:
         # Register
-        command = ('reg_f3d -ref 00_t1.nii.gz -flo final_image_on_00.nii.gz '
+        command = (f'reg_f3d -ref {ref_path} -flo {flo_path} '
                    f'-cpp cpp_be_{be:.5f}.nii.gz '
                    f'-res res_be_{be:.5f}.nii.gz -be {be}'.split())
         call(command)
 
         # Jacobian
-        command = ('reg_jacobian -ref 00_t1.nii.gz '
+        command = (f'reg_jacobian -ref {ref_path} '
                    f'-trans cpp_be_{be:.5f}.nii.gz -jac jac_be_{be:.5f}.nii.gz '
                    f'-jacL jacL_be_{be:.5f}.nii.gz'.split())
         call(command)
@@ -60,7 +73,7 @@ def main():
         make_label_map(f'jac_be_{be:.5f}.nii.gz', 1,
                        f'jac_be_{be:.5f}_label_map.nii.gz')
 
-        reg.spline_to_displacement_field('00_t1.nii.gz',
+        reg.spline_to_displacement_field(f'{ref_path}',
                                          f'cpp_be_{be:.5f}.nii.gz',
                                          f'cpp_be_{be:.5f}_disp.nii.gz')
 
