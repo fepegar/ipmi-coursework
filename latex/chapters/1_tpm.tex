@@ -27,7 +27,7 @@ The linear version of NiftyReg (Aladin block-matching algorithm), uses normalise
 
 
 \subsection{Rigid coregistration}
-First, the $T_1$-weighted image of one segmented subject is taken as reference and the rest of the subjects are registered to the reference one by one using rigid registration, i.e. 6 degrees of freedom (DOF) representing translation and rotation. The floating images are resampled to the reference space and averaged in order to generate the initial version of the template image. For visualisation purposes, the label maps have also been transformed to the reference space and the results have been averaged label by label, yielding an initial version of the TPMs. Figure \ref{fig:template-rigid} shows the results of this initial coregistration step.
+First, the $T_1$-weighted image of one segmented subject is taken as reference and the rest of the subjects are registered to the reference one by one using rigid registration, i.e. 6 degrees of freedom (DOF) representing translation and rotation. The floating images are resampled to the reference space and averaged in order to generate the initial version of the template image. Since all the images values were in the same range ([0, 255]), no preprocessing was applied to the data. If that was not the case, the intensity of all the images should have been normalised before the averaging. For visualisation purposes, the label maps have also been transformed to the reference space and the results have been averaged label by label, yielding an initial version of the TPMs. Figure \ref{fig:template-rigid} shows the results of this initial coregistration step.
 
 \begin{figure}
   \centering
